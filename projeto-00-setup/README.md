@@ -15,37 +15,60 @@ The docker starts 4 containers each one with a different service, as described b
 
 
 
-## Environment variables
+## Getting started
+
+### Environment variables
 
 An environment file must be created inside the docker/ folder following .env file with the structure:
 
-INFLUXDB\_USERNAME="InfluxUser"
+INFLUXDB_USERNAME="InfluxUser"
 
-INFLUXDB\_PASSWORD="InfluxPassword"
+INFLUXDB_PASSWORD="InfluxPassword"
 
-INFLUXDB\_ORG="Organization'
+INFLUXDB_ORG="Organization"
 
-INFLUXDB\_BUCKET="Bucket"
+INFLUXDB_BUCKET="Bucket"
 
-INFLUXDB\_TOKEN="Token"
+INFLUXDB_TOKEN="Token"
 
-GRAFANA\_PASSWORD="GrafanaPassword"
-
-
+GRAFANA_PASSWORD="GrafanaPassword"
 
 Replace the placeholder values with your own credentials. Do not use quotation marks.
 
-
+Passwords must be between 8 and 72 characters long
 
 This file cannot be commited on git.
 
 
+### Start docker compose
 
-## Getting started
-
-Navigate  to the docker/ folder on terminal and run the command: docker compose up -d
+Navigate to the docker/ folder on terminal and run the command: docker compose up -d
 
 
+### Configuring Portainer
+
+Run the code and search for Portainer setup-token
+docker logs portainer
+
+Access http://localhost:9000/, create your user and password and paste the setup-token
+
+### Configuring Grafana
+
+Access http://localhost:3000 
+
+Login with user admin, and the password defined on .env file. If the password doesn't work, try admin. This happens when the container was initialized before the .env file was created.
+
+Configure the parameters below:
+
+
+
+Connections -> Data sources -> Add data source -> Select InfluxDB -> Fill the parameters below:
+
+* Query language: Flux
+* URL: http://influxdb:8086
+* Organization: Defined on .env file
+* Token: Defined on .env file
+* Default bucket: Defined on .env file
 
 
 
@@ -71,27 +94,8 @@ To test the connection with Mosquitto, open two separate terminals, as described
 
 
 
-Terminal 1: docker exec -it mosquitto mosquitto\_sub -t "test/topic"
+Terminal 1: docker exec -it mosquitto mosquitto_sub -t "test/topic"
 
-Terminal 2: docker exec -it mosquitto mosquitto\_pub -t "test/topic" -m "hello mqtt"
-
-
+Terminal 2: docker exec mosquitto mosquitto_pub -t "test/topic" -m "hello mqtt"
 
 After command on Terminal 2, must be displayed on terminal 1 "hello mqtt"
-
-
-
-## Configuring Grafana
-
-Access http://localhost:3000 and configure the parameters below:
-
-
-
-Data sources -> Add data source -> Select InfluxDB -> Fill the parameters below:
-
-* Query language: Flux
-* URL: http://influxdb:8086
-* Organization: Defined on .env file
-* Token: Defined on .env file
-* Default bucket: Defined on .env file
-
