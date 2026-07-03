@@ -16,13 +16,17 @@ Debian was used as operational system.
 #### System configuration
 
 The procedure described below is just valid for the first boot and must run direct on the Pi interface:
+
 1 - Login with "root" user without password
+
 2 - Create and give the correct permissions for a new user:
     - adduser "username"
     - usermod -aG sudo "username"
+
 3 - Setup fixed IP:
     - nano /etc/systemd/network/10-eth0.network
     Enter with the data below:
+    
     [Match]
     Name=eth0
 
@@ -30,27 +34,34 @@ The procedure described below is just valid for the first boot and must run dire
     Address="DesireIPAddress"
     Gateway="DesireGatewayAddress"
     DNS=8.8.8.8
+
     - Run the commands:
     - apt install systemd-networkd
     - systemctl enable systemd-networkd
     - systemctl start systemd-networkd
+
 4 - Install SSH server
     - apt install openssh-server
     - systemctl enable ssh
     - systemctl start ssh
 
+
 Now can switch to SSH connection
+
 
 5 - Connect by ssh
     - ssh "username"@"definedIpAddress"
+
 6 - Install sudo
     - su -
     - apt update
     - apt install sudo
     - exit
     - sudo apt update && sudo apt upgrade -y
+
 7 - Install base libraries
     - sudo apt install -y git python3 python3-pip build-essential libmodbus-dev libgpiod-dev
+
 8 - Install python libraries
     - pip3 install pymodbus paho-mqtt --break-system-packages
     - pip3 install asyncua --break-system-packages
@@ -60,6 +71,7 @@ Now can switch to SSH connection
     - cd ~
     - echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
     - source ~/.bashrc
+
 9 - Connect to GitHub
     - git config --global user.name "YourUserName"
     - git config --global user.email "YourEmail"
