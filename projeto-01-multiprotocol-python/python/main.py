@@ -1,9 +1,9 @@
 from MQTT.mqtt_client import MQTTClient
 from MQTT.readMqttConf import ReadMqttConf
-from Field_protocols.s7_nonOptimized import S7_NonOptimized
-from Field_protocols.OPC_UA import OPC_UA
-from Field_protocols.ModbusTCP import ModbusTCP
-from Field_protocols.EthernetIP import EthernetIP
+from ConnectionManager import ConnectionManager
+import json
+import time
+import datetime
 
 def main():
 
@@ -14,8 +14,8 @@ def main():
     mqtt_client = MQTTClient(host=mqtt_conf.host, port=mqtt_conf.port)
     mqtt_client.connect()
 
-    ethernetIP_client = EthernetIP("192.168.15.201")
-    ethernetIP_client.connect()
+    connection = ConnectionManager()
+    connection.connect_all()
 
 
     while True:
@@ -23,13 +23,15 @@ def main():
         if message.lower() == 'exit':
             break
 
-        print(f"iVar: {ethernetIP_client.read_variable("iVar")}")
-        print(f"xVar: {ethernetIP_client.read_variable("xVar")}")
-        print(f"flVar: {ethernetIP_client.read_variable("flVar")}")
-        print(f"sVar: {ethernetIP_client.read_variable("sVar")}")
-    
-    mqtt_client.disconnect()
+        variables = connection.read_variables_all()
+        for var in variables:
+            payload = json.dumps({"name": var["Name"],
+                                  "value": var["Value"],
+                                  "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()})
+            mqtt_client.publish(topic=var["Topic"], message=payload)
 
+    mqtt_client.disconnect()
+    connection.disconnect_all()
 
 if __name__ == "__main__":
     main()

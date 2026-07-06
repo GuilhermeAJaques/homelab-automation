@@ -1,0 +1,5 @@
+2,sDateTime,String,0.0,Siemens
+2,iVar,Int,256.0,Siemens
+2,xVar,Bool,258.0,Siemens
+2,idVar,Dint,260.0,Siemens
+2,flVar,Real,264.0,Siemens

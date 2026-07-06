@@ -1,0 +1,4 @@
+iVar,%QW0,INT,Codesys
+xVar,%QX2.0,BOOL,Codesys
+flVar,%QD4,REAL,Codesys
+sVar,%QB20,STRING,Codesys

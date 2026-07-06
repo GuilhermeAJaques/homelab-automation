@@ -45,11 +45,8 @@ class MQTTClient:
             # Check if the client is connected to the broker before publishing
             if self.connected:
                 # Send MQTT message
-                print("Trying to publish message: {} to topic: {}".format(message, topic))
                 result = self.client.publish(topic, message)
-                if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                    print("Message published successfully")
-                else:
+                if result.rc != mqtt.MQTT_ERR_SUCCESS:
                     print("Failed to publish message: {}".format(result.rc))
             else:
                 print("Failed to publish message: Not connected to MQTT broker")
