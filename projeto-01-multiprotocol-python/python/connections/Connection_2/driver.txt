@@ -4,4 +4,4 @@ driver=2
 
 # Only need to fill the parameters for the driver selected
 [Rockwell Ethernet/IP]
-ip=192.168.1.115
+ip=192.168.15.201

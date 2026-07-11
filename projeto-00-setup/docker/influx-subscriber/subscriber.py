@@ -5,19 +5,32 @@ import json
 import os
 
 class InfluxSubscriber:
-    def __init__(self, mqtt_host, mqtt_port, influx_url, influx_token, influx_org, influx_bucket):
+    def __init__(self, 
+                 mqtt_host, 
+                 mqtt_port, 
+                 influx_url, 
+                 influx_token, 
+                 influx_org, 
+                 influx_bucket, 
+                 mqtt_username=None, 
+                 mqtt_password=None):
 
         # Influx parameters
-        self.influx_client = InfluxDBClient(url=influx_url, token=influx_token, org=influx_org)
+        self.influx_client = InfluxDBClient(url=influx_url, 
+                                            token=influx_token, 
+                                            org=influx_org)
         self.write_api = self.influx_client.write_api(write_options=SYNCHRONOUS)
         self.bucket = influx_bucket
 
         # MQTT parameter
         self.mqtt_client = mqtt.Client()
+        
+        if mqtt_username and mqtt_password:
+            self.mqtt_client.username_pw_set(mqtt_username, mqtt_password)
+
         self.mqtt_client.on_connect = self._on_connect
         self.mqtt_client.on_message = self._on_message
         self.mqtt_client.connect(mqtt_host, mqtt_port)
-
 
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
@@ -52,6 +65,8 @@ if __name__ == "__main__":
     subscriber = InfluxSubscriber(
         mqtt_host=os.getenv("MQTT_HOST", "mosquitto"),
         mqtt_port=int(os.getenv("MQTT_PORT", "1883")),
+        mqtt_username=os.getenv("MQTT_USERNAME"),
+        mqtt_password=os.getenv("MQTT_PASSWORD"),
         influx_url=os.getenv("INFLUX_URL", "http://influxdb:8086"),
         influx_token=os.getenv("INFLUX_TOKEN"),
         influx_org=os.getenv("INFLUX_ORG", "homelab"),
