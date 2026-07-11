@@ -2,7 +2,9 @@ from Field_protocols.s7_nonOptimized import S7_NonOptimized
 from Field_protocols.OPC_UA import OPC_UA
 from Field_protocols.ModbusTCP import ModbusTCP
 from Field_protocols.EthernetIP import EthernetIP
-from gpio_driver import GPIO_driver
+import platform
+if platform.system() == 'Linux':
+    from gpio_driver import GPIO_driver
 import configparser
 import os
 import csv
@@ -25,6 +27,7 @@ class ConnectionManager:
 
         for folder in sorted(os.listdir(base_path)):
             if folder.startswith("Connection_"):
+                print(f"Processing: {folder}")
                 configFile = configparser.ConfigParser()
                 variables = []
                 parameters = {}
@@ -48,6 +51,9 @@ class ConnectionManager:
 
                 match (driver):
                     case DriverType.GPIO: # GPIO driver
+                        if platform.system() != 'Linux':
+                            print("GPIO driver only available on Linux")
+                            continue
                         # Get parameters
                         parameters = {} # No parameters required
                         driver_instance = GPIO_driver()
@@ -208,6 +214,9 @@ class ConnectionManager:
             value = 0
             match (connection["Driver"]):
                 case DriverType.GPIO: # GPIO
+                    if platform.system() != 'Linux':
+                        print("GPIO driver only available on Linux")
+                        continue
                     for variable in connection["Variables"]:
                         if (variable["Access"] == "r"):
                             value = driver.read_variable(variable["GPIO"])
@@ -284,6 +293,9 @@ class ConnectionManager:
                     if (variable["Topic"] == topic):
                         match (connection["Driver"]):
                             case DriverType.GPIO: # GPIO
+                                if platform.system() != 'Linux':
+                                    print("GPIO driver only available on Linux")
+                                    continue
                                 driver.write_variable(variable["GPIO"],
                                                       value)
                             case DriverType.S7: # S7
