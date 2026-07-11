@@ -1,12 +1,9 @@
 import configparser
 
-class ReadMqttConf:
+class ReadGeneralConf:
     def __init__(self, config_file):
         config = configparser.ConfigParser()
-        self.host = None
-        self.port = None
-        self.username = None
-        self.password = None
+        self.cycle = None
 
         # Read the configuration file
         try:
@@ -16,12 +13,9 @@ class ReadMqttConf:
         except Exception as e:
             print("Error reading configuration file: {}".format(e))
 
-        # Extract MQTT broker parameters from the configuration file
+        # Extract General parameters from the configuration file
         # These variables are acessible from the class instance
         try:
-            self.host = config["broker"]["host"]
-            self.port = int(config["broker"]["port"])
-            self.username = config["broker"]["username"]
-            self.password = config["broker"]["password"]
+            self.cycle = (float(config["General parameters"]["scanCycle"]) / 1000)
         except Exception as e:
-            print("Error extracting MQTT broker parameters: {}".format(e))
+            print("Error extracting General parameters: {}".format(e))

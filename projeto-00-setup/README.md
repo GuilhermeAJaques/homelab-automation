@@ -89,6 +89,8 @@ The docker starts 4 containers each one with a different service, as described b
 * InfluxDB: Time-series database.
 * Grafana: Visualization and dashboarding tool, connected to InfluxDB.
 * Mosquitto: MQTT Broker.
+* Node-red: Work as front end and operation terminal
+* Inlufx-Subscribe: Code created by me to send data from MQTT broker to InluxDB in python
 
 
 
@@ -109,6 +111,10 @@ INFLUXDB_BUCKET="Bucket"
 INFLUXDB_TOKEN="Token"
 
 GRAFANA_PASSWORD="GrafanaPassword"
+
+MQTT_USERNAME="MQTT Usename"
+
+MQTT_PASSWORD="MQTT Password"
 
 Replace the placeholder values with your own credentials. Do not use quotation marks.
 
@@ -164,6 +170,8 @@ The container that has a webpage, can be checked accessing below:
 | InfluxDB  | 8086 | http://localhost:8086 |
 
 | Grafana   | 3000 | http://localhost:3000 |
+
+| Node-red  | 1880 | http://localhost:1880 |
 
 
 

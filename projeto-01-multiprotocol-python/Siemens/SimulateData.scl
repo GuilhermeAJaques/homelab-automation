@@ -1,0 +1,53 @@
+﻿FUNCTION_BLOCK "SimulateData"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      hold_timer { S7_SetPoint := 'False'} : "TIMER";
+      pulse { S7_SetPoint := 'True'} : Array[0..15] of Bool;
+   END_VAR
+
+
+BEGIN
+	IF "DB_NonOptimized".status = 'HEATING' THEN
+	    IF "DB_NonOptimized".temperature < "DB_NonOptimized".setpoint THEN
+	        IF "Clock_5Hz" THEN
+	            IF NOT #pulse[0] THEN
+	                #pulse[0] := TRUE;
+	                "DB_NonOptimized".temperature := "DB_NonOptimized".temperature + 0.5;
+	                "DB_NonOptimized".valve_open := TRUE;
+	                "DB_NonOptimized".agitator_on := TRUE;
+	            END_IF;
+	        ELSE
+	            #pulse[0] := FALSE;
+	        END_IF;
+	    ELSE
+	        "DB_NonOptimized".status := 'HOLDING';
+	        #hold_timer.IN := TRUE;
+	    END_IF;
+	END_IF;
+	
+	IF "DB_NonOptimized".status = 'HOLDING' THEN
+	    #hold_timer.IN := TRUE;
+	    IF #hold_timer.Q THEN
+	        #hold_timer.IN := false;
+	        "DB_NonOptimized".status := 'DONE';
+	        "DB_NonOptimized".batch_count := "DB_NonOptimized".batch_count + 1;
+	        "DB_NonOptimized".valve_open := FALSE;
+	    END_IF;
+	END_IF;
+	
+	IF "DB_NonOptimized".status = 'DONE' THEN
+	    "DB_NonOptimized".temperature := 20.0;
+	    "DB_NonOptimized".agitator_on := FALSE;
+	    "DB_NonOptimized".status := 'IDLE';
+	END_IF;
+	
+	IF "DB_NonOptimized".start_command AND "DB_NonOptimized".status = 'IDLE' THEN
+	    "DB_NonOptimized".status := 'HEATING';
+	    "DB_NonOptimized".start_command := FALSE;
+	END_IF;
+	
+	#hold_timer(IN := #hold_timer.IN,
+	            PT := T#10S);
+END_FUNCTION_BLOCK
+

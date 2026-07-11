@@ -2,7 +2,7 @@ import paho.mqtt.client as mqtt
 import time
 
 class MQTTClient:
-    def __init__(self, host, port):
+    def __init__(self, host, port, username=None, password=None):
         # Initialize MQTT broker parameters
         self.host = host
         self.port = port
@@ -11,8 +11,17 @@ class MQTTClient:
         # Create MQTT client instance
         self.client = mqtt.Client()
 
+        # Login with credentialsif username and password:
+        if username and password:
+            self.client.username_pw_set(username, password)
+
         # Callback for connection event
         self.client.on_connect = self._on_connect
+        self.client.on_disconnect = self._on_disconnect
+
+        # Call back from mqtt subscribe
+        self.client.on_message = self._on_message
+        self.on_message_callback = None
 
     def connect(self):
         try:
@@ -53,9 +62,31 @@ class MQTTClient:
         except Exception as e:
             print("Error publishing message: {}".format(e))
 
+    def subscribe(self, topic):
+        try:
+            # Check if the client is connected to the broker before publishing
+            if self.connected:
+                # Send MQTT message
+                self.client.subscribe(topic)
+            else:
+                print("Failed to subscribe message: Not connected to MQTT broker")
+        except Exception as e:
+            print("Error subscribe message: {}".format(e))
+
+
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             self.connected = True
             print("Connected to MQTT broker")
         else:
             print("Failed to connect to MQTT broker, return code: {}".format(rc))
+
+    def _on_disconnect(self, client, userdata, rc):
+        self.connected = False
+        print(f"Disconnected from MQTT broker, rc={rc}")
+
+    def _on_message(self, client, userdata, message):
+        if self.on_message_callback:
+            topic = message.topic
+            payload = message.payload.decode()
+            self.on_message_callback(topic, payload)

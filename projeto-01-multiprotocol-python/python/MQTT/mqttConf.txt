@@ -1,3 +1,5 @@
 [broker]
 host=localhost
 port=1883
+username=homelab
+password=1234

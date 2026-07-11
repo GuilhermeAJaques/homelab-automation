@@ -36,6 +36,10 @@ class S7_NonOptimized:
                 print("Not connected to S7 PLC.")
                 return None
             
+            # Reconection
+            if not self.client.get_connected():
+                self.connect()
+            
             # Get the start address
             if '.' in offset: # If user enter the offset like TIA e.g. 10.0, 45.3
                 if datatype.lower() == 'bool':
@@ -56,13 +60,53 @@ class S7_NonOptimized:
                 # bool must be read the bit number
                 value = snap7.util.get_bool(data, 0, bit_offset)
             else:
-                value = self.__convert_data(data, datatype)
+                value = self.__convert_to_value(data, datatype)
 
             return value
         
         except Exception as e:
             print(f"Error reading data from S7 PLC: {e}")
             return None
+        
+    def write_variable(self, db_number, offset, datatype, value):
+        try:
+            # Check if connected to the PLC
+            if not self.connected:
+                print("Not connected to S7 PLC.")
+                return None
+            
+            # Reconection
+            if not self.client.get_connected():
+                self.connect()
+            
+            # Get the start address
+            if '.' in offset: # If user enter the offset like TIA e.g. 10.0, 45.3
+                if datatype.lower() == 'bool':
+                    # Bool must be read the bit number
+                    start_address = int(offset.split('.')[0])   
+                    bit_offset = int(offset.split('.')[1])
+                else:
+                    start_address = int(offset.split('.')[0])   
+                    bit_offset = 0
+            else:
+                start_address = int(offset)
+                bit_offset = 0
+
+            
+            if datatype.lower() == 'bool':
+                data = self.client.db_read(db_number, start_address, 1)
+                snap7.util.set_bool(data, 0, bit_offset, value)
+                self.client.db_write(db_number, start_address, data)
+            else:
+                self.client.db_write(db_number, 
+                                 start_address, 
+                                 self.__convert_to_data(bytearray(self.__getDTsize(datatype)), 
+                                                        datatype, 
+                                                        value))
+
+        except Exception as e:
+            print(f"Error writing data from S7 PLC: {e}")
+
         
     def __getDTsize(self, datatype):
         try:
@@ -114,7 +158,7 @@ class S7_NonOptimized:
             print(f"Error determining size for datatype {datatype}: {e}")
             return None
     
-    def __convert_data(self, data, datatype):
+    def __convert_to_value(self, data, datatype):
         try:
             match datatype.lower():
                 case 'byte':
@@ -146,6 +190,64 @@ class S7_NonOptimized:
                     if datatype.lower().startswith('string[') and datatype.endswith(']'):
                         try:
                             return snap7.util.get_string(data, 0)
+                        except ValueError:
+                            print(f"Invalid string length specified: {datatype}")
+                            return None
+                    else:
+                        print(f"Unsupported datatype: {datatype}")
+                        return None
+        
+        except Exception as e:
+            print(f"Error converting data for datatype {datatype}: {e}")
+            return None
+    
+    def __convert_to_data(self, data, datatype, value):
+        try:
+            match datatype.lower():
+                case 'byte':
+                    snap7.util.set_byte(data, 0, value)
+                    return data
+                case 'word':
+                    snap7.util.set_word(data, 0, value)
+                    return data
+                case 'dword':
+                    snap7.util.set_dword(data, 0, value)
+                    return data
+                case 'usint':
+                    snap7.util.set_usint(data, 0, value)
+                    return data
+                case 'sint':
+                    snap7.util.set_sint(data, 0, value)
+                    return data
+                case 'uint':
+                    snap7.util.set_uint(data, 0, value)
+                    return data
+                case 'int':
+                    snap7.util.set_int(data, 0, value)
+                    return data
+                case 'udint':
+                    snap7.util.set_udint(data, 0, value)
+                    return data
+                case 'dint':
+                    snap7.util.set_dint(data, 0, value)
+                    return data
+                case 'real':
+                    snap7.util.set_real(data, 0, value)
+                    return data
+                case 'lreal':
+                    snap7.util.set_lreal(data, 0, value)
+                    return data
+                case 'string':
+                    data = bytearray(self.__getDTsize(datatype))
+                    snap7.util.set_string(data, 0, value, 254)
+                    return data
+                case _:
+                    # Before to return error, check if is not string with length defined
+                    if datatype.lower().startswith('string[') and datatype.endswith(']'):
+                        try:
+                            data = bytearray(self.__getDTsize(datatype))
+                            snap7.util.set_string(data, 0, value, 254)
+                            return data
                         except ValueError:
                             print(f"Invalid string length specified: {datatype}")
                             return None

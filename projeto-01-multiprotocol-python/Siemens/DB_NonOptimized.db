@@ -1,0 +1,20 @@
+﻿DATA_BLOCK "DB_NonOptimized"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+NON_RETAIN
+   STRUCT 
+      setpoint : Real;
+      temperature : Real;
+      valve_open : Bool;
+      agitator_on : Bool;
+      batch_count : Int;
+      status : String;
+      start_command : Bool;
+   END_STRUCT;
+
+
+BEGIN
+   status := 'IDLE';
+
+END_DATA_BLOCK
+

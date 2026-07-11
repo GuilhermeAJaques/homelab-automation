@@ -5,8 +5,14 @@ from Field_protocols.EthernetIP import EthernetIP
 import configparser
 import os
 import csv
+from enum import IntEnum
 
-
+class DriverType(IntEnum):
+    GPIO = 0
+    S7 = 1
+    ETHERNET_IP = 2
+    MODBUS_TCP = 3
+    OPC_UA = 4
 
 class ConnectionManager:
     def __init__(self):
@@ -14,6 +20,7 @@ class ConnectionManager:
         base_path = "connections/"
 
         self.connections = []
+        self.subTopics = set()
 
         for folder in sorted(os.listdir(base_path)):
             if folder.startswith("Connection_"):
@@ -39,7 +46,7 @@ class ConnectionManager:
                     continue
 
                 match (driver):
-                    case 0: # S7
+                    case DriverType.S7: # S7
                         # Get parameters
                         parameters = {
                             "ip": configFile["Siemens S7"]["ip"],
@@ -53,21 +60,25 @@ class ConnectionManager:
                         # Get variables
                         try:
                             with open(connection_path + "/variables.csv") as file:
-                                reader = csv.reader(file)
+                                reader = csv.reader(file, delimiter=';')
                                 for row in reader:
                                     variable = {
                                         "DB": int(row[0]),
                                         "Name": row[1],
                                         "Type": row[2],
                                         "Offset": row[3],
-                                        "Topic": row[4]
+                                        "Topic": row[4],
+                                        "Access": row[5]
                                     }
                                     variables.append(variable)
+
+                                    if (variable["Access"] == "w"):
+                                        self.subTopics.add(variable["Topic"])
                         except Exception as e:
                             print("Error reading variables file: {}".format(e))
 
 
-                    case 1: # Ethernet/IP
+                    case DriverType.ETHERNET_IP: # Ethernet/IP
                         # Get parameters
                         parameters = {
                             "ip": configFile["Rockwell Ethernet/IP"]["ip"]
@@ -77,18 +88,22 @@ class ConnectionManager:
                         # Get variables
                         try:
                             with open(connection_path + "/variables.csv") as file:
-                                reader = csv.reader(file)
+                                reader = csv.reader(file, delimiter=';')
                                 for row in reader:
                                     variable = {
                                         "Name": row[0],
-                                        "Topic": row[1]
+                                        "Topic": row[1],
+                                        "Access": row[2]
                                     }
                                     variables.append(variable)
+
+                                    if (variable["Access"] == "w"):
+                                        self.subTopics.add(variable["Topic"])
                         except Exception as e:
                             print("Error reading variables file: {}".format(e))
 
 
-                    case 2: # Modbus TCP
+                    case DriverType.MODBUS_TCP: # Modbus TCP
                         # Get parameters
                         parameters = {
                             "ip": configFile["Modbus TCP"]["ip"],
@@ -100,20 +115,24 @@ class ConnectionManager:
                         # Get variables
                         try:
                             with open(connection_path + "/variables.csv") as file:
-                                reader = csv.reader(file)
+                                reader = csv.reader(file, delimiter=';')
                                 for row in reader:
                                     variable = {
                                         "Name": row[0],
                                         "Address": row[1],
                                         "Type": row[2],
-                                        "Topic": row[3]
+                                        "Topic": row[3],
+                                        "Access": row[4]
                                     }
                                     variables.append(variable)
+
+                                    if (variable["Access"] == "w"):
+                                        self.subTopics.add(variable["Topic"])
                         except Exception as e:
                             print("Error reading variables file: {}".format(e))
 
 
-                    case 3: # OPC-UA
+                    case DriverType.OPC_UA: # OPC-UA
                         # Get parameters
                         parameters = {
                             "url": configFile["OPC-UA"]["url"]
@@ -123,13 +142,17 @@ class ConnectionManager:
                         # Get variables
                         try:
                             with open(connection_path + "/variables.csv") as file:
-                                reader = csv.reader(file)
+                                reader = csv.reader(file, delimiter=';')
                                 for row in reader:
                                     variable = {
                                         "Name": row[0],
-                                        "Topic": row[1]
+                                        "Topic": row[1],
+                                        "Access": row[2]
                                     }
                                     variables.append(variable)
+
+                                    if (variable["Access"] == "w"):
+                                        self.subTopics.add(variable["Topic"])
                         except Exception as e:
                             print("Error reading variables file: {}".format(e))
                 
@@ -159,58 +182,88 @@ class ConnectionManager:
             driver = connection["driver_instance"]
             value = 0
             match (connection["Driver"]):
-                case 0: # S7
+                case DriverType.S7: # S7
                     for variable in connection["Variables"]:
-                        value = driver.read_variable(variable["DB"], 
-                                                     variable["Offset"], 
-                                                     variable["Type"])
+                        if (variable["Access"] == "r"):
+                            value = driver.read_variable(variable["DB"], 
+                                                        variable["Offset"], 
+                                                        variable["Type"])
+                            
+                            # Build variable struct
+                            result = {
+                                "Name": variable["Name"],
+                                "Value": value,
+                                "Topic": variable["Topic"]
+                            }
+                            variables.append(result)
                         
-                        # Build variable struct
-                        result = {
-                            "Name": variable["Name"],
-                            "Value": value,
-                            "Topic": variable["Topic"]
-                        }
-                        variables.append(result)
-                        
-                case 1: # Ethernet/IP
+                case DriverType.ETHERNET_IP: # Ethernet/IP
                     for variable in connection["Variables"]:
-                        value = driver.read_variable(variable["Name"])
-                        
-                        # Build variable struct
-                        result = {
-                            "Name": variable["Name"],
-                            "Value": value,
-                            "Topic": variable["Topic"]
-                        }
-                        variables.append(result)
+                        if (variable["Access"] == "r"):
+                            value = driver.read_variable(variable["Name"])
+                            
+                            # Build variable struct
+                            result = {
+                                "Name": variable["Name"],
+                                "Value": value,
+                                "Topic": variable["Topic"]
+                            }
+                            variables.append(result)
 
-                case 2: # Modbus TCP
+                case DriverType.MODBUS_TCP: # Modbus TCP
                     for variable in connection["Variables"]:
-                        value = driver.read_variable(variable["Address"], 
-                                                     variable["Type"])
-                        
-                        # Build variable struct
-                        result = {
-                            "Name": variable["Name"],
-                            "Value": value,
-                            "Topic": variable["Topic"]
-                        }
-                        variables.append(result)
+                        if (variable["Access"] == "r"):
+                            value = driver.read_variable(variable["Address"], 
+                                                        variable["Type"])
+                            
+                            # Build variable struct
+                            result = {
+                                "Name": variable["Name"],
+                                "Value": value,
+                                "Topic": variable["Topic"]
+                            }
+                            variables.append(result)
 
-                case 3: # OPC-UA
+                case DriverType.OPC_UA: # OPC-UA
                     for variable in connection["Variables"]:
-                        value = driver.read_variable(variable["Name"])
-                        
-                        # Build variable struct
-                        result = {
-                            "Name": variable["Name"],
-                            "Value": value,
-                            "Topic": variable["Topic"]
-                        }
-                        variables.append(result)
+                        if (variable["Access"] == "r"):
+                            value = driver.read_variable(variable["Name"])
+                            
+                            # Build variable struct
+                            result = {
+                                "Name": variable["Name"],
+                                "Value": value,
+                                "Topic": variable["Topic"]
+                            }
+                            variables.append(result)
         
         return variables
+    
+    def write_variable(self, topic, value):
+        try:
+            for connection in self.connections:
+                driver = connection["driver_instance"]
+                for variable in connection["Variables"]:
+                    if (variable["Topic"] == topic):
+                        match (connection["Driver"]):
+                            case DriverType.S7: # S7
+                                driver.write_variable(variable["DB"], 
+                                                      variable["Offset"], 
+                                                      variable["Type"],
+                                                      value)
+                            case DriverType.ETHERNET_IP: # Ether
+                                driver.write_variable(variable["Name"],
+                                                      value)
+                            case DriverType.MODBUS_TCP: # Modbus TCP
+                                driver.write_variable(variable["Address"], 
+                                                      variable["Type"],
+                                                      value)
+                            case DriverType.OPC_UA: # OPC-UA
+                                driver.write_variable(variable["Name"],
+                                                      value)
+        
+        except Exception as e:
+            print("Error writing variables: {}".format(e))
     
 
     def __getDriverType(self, file):
@@ -220,3 +273,10 @@ class ConnectionManager:
             print("Error extracting driver parameters: {}".format(e))
         
         return None
+    
+    def is_writable(self, topic):
+        for connection in self.connections:
+            for variable in connection["Variables"]:
+                if variable["Topic"] == topic:
+                    return variable["Access"] == "w"
+        return False

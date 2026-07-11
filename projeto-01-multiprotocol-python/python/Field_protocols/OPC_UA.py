@@ -1,4 +1,5 @@
 from opcua import Client
+from opcua import ua
 
 class OPC_UA:
     def __init__(self, endpoint):
@@ -30,10 +31,25 @@ class OPC_UA:
         except Exception as e:
             print(f"Error disconnecting from OPC UA server: {e}")
 
+    def __reconnect(self):
+        try:
+            self.client.disconnect()
+        except:
+            pass
+        try:
+            self.client.connect()
+            self._node_cache.clear()
+            self.connected = True
+            print(f"Reconnected to OPC UA server at {self.endpoint}")
+        except Exception as e:
+            self.connected = False
+            print(f"Error reconnecting to OPC UA server: {e}")
+
     def read_variable(self, variableName):
         try:
             if not self.connected:
                 print("Not connected to OPC UA server.")
+                self.__reconnect()
                 return None
             
             if variableName in self._node_cache:
@@ -51,6 +67,33 @@ class OPC_UA:
         
         except Exception as e:
             print(f"Error reading variable {variableName} from OPC UA server: {e}")
+            self.__reconnect()
+            return None
+
+    def write_variable(self, variableName, value):
+        try:
+            if not self.connected:
+                print("Not connected to OPC UA server.")
+                self.__reconnect()
+                return None
+            
+            if variableName in self._node_cache:
+                node = self._node_cache[variableName]
+            else:
+                root = self.client.get_root_node()
+                node = self.__find_node(root, variableName, 0)
+                if node is not None:
+                    self._node_cache[variableName] = node
+                else:
+                    print(f"Variable {variableName} not found in OPC UA server.")
+                    return None
+            node_type = node.get_data_type_as_variant_type()
+            variant = ua.Variant(value, node_type)
+            node.set_value(ua.DataValue(variant))
+        
+        except Exception as e:
+            print(f"Error writing variable {variableName} from OPC UA server: {e}")
+            self.__reconnect()
             return None
         
     def __find_node(self, parent, var_name, deepCount):
