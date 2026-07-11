@@ -1,5 +1,5 @@
 [Settings]
-# Driver options: 1: Siemens S7; 2: Rockwell Ethernet/IP; 3: Modbus TCP; 4: OPC-UA
+# Driver options: 0: GPIO; 1: Siemens S7; 2: Rockwell Ethernet/IP; 3: Modbus TCP; 4: OPC-UA
 driver=2
 
 # Only need to fill the parameters for the driver selected

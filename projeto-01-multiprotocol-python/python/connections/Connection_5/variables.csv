@@ -1,0 +1,3 @@
+4;gpio/sensor;r
+5;gpio/button;r
+6;gpio/led;w

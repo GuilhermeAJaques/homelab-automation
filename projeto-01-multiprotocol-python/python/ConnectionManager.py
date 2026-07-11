@@ -2,6 +2,7 @@ from Field_protocols.s7_nonOptimized import S7_NonOptimized
 from Field_protocols.OPC_UA import OPC_UA
 from Field_protocols.ModbusTCP import ModbusTCP
 from Field_protocols.EthernetIP import EthernetIP
+from gpio_driver import GPIO_driver
 import configparser
 import os
 import csv
@@ -46,6 +47,30 @@ class ConnectionManager:
                     continue
 
                 match (driver):
+                    case DriverType.GPIO: # GPIO driver
+                        # Get parameters
+                        parameters = {} # No parameters required
+                        driver_instance = GPIO_driver()
+
+                        # Get variables
+                        try:
+                            with open(connection_path + "/variables.csv") as file:
+                                reader = csv.reader(file, delimiter=';')
+                                for row in reader:
+                                    variable = {
+                                        "Name": str(row[0]),
+                                        "GPIO": int(row[0]),
+                                        "Topic": row[1],
+                                        "Access": row[2]
+                                    }
+                                    variables.append(variable)
+
+                                    if (variable["Access"] == "w"):
+                                        self.subTopics.add(variable["Topic"])
+                        except Exception as e:
+                            print("Error reading variables file: {}".format(e))
+
+
                     case DriverType.S7: # S7
                         # Get parameters
                         parameters = {
@@ -182,6 +207,18 @@ class ConnectionManager:
             driver = connection["driver_instance"]
             value = 0
             match (connection["Driver"]):
+                case DriverType.GPIO: # GPIO
+                    for variable in connection["Variables"]:
+                        if (variable["Access"] == "r"):
+                            value = driver.read_variable(variable["GPIO"])
+                            
+                            # Build variable struct
+                            result = {
+                                "Name": variable["Name"],
+                                "Value": value,
+                                "Topic": variable["Topic"]
+                            }
+                            variables.append(result)
                 case DriverType.S7: # S7
                     for variable in connection["Variables"]:
                         if (variable["Access"] == "r"):
@@ -246,6 +283,9 @@ class ConnectionManager:
                 for variable in connection["Variables"]:
                     if (variable["Topic"] == topic):
                         match (connection["Driver"]):
+                            case DriverType.GPIO: # GPIO
+                                driver.write_variable(variable["GPIO"],
+                                                      value)
                             case DriverType.S7: # S7
                                 driver.write_variable(variable["DB"], 
                                                       variable["Offset"], 
