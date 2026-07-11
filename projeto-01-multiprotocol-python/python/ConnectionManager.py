@@ -27,7 +27,6 @@ class ConnectionManager:
 
         for folder in sorted(os.listdir(base_path)):
             if folder.startswith("Connection_"):
-                print(f"Processing: {folder}")
                 configFile = configparser.ConfigParser()
                 variables = []
                 parameters = {}
@@ -55,8 +54,10 @@ class ConnectionManager:
                             print("GPIO driver only available on Linux")
                             continue
                         # Get parameters
-                        parameters = {} # No parameters required
-                        driver_instance = GPIO_driver()
+                        parameters = {
+                            "gpio": configFile["GPIO"]["chip"]
+                        }
+                        driver_instance = GPIO_driver(chip=parameters["gpio"])
 
                         # Get variables
                         try:

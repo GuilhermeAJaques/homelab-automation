@@ -1,3 +1,6 @@
 [Settings]
 # Driver options: 0: GPIO; 1: Siemens S7; 2: Rockwell Ethernet/IP; 3: Modbus TCP; 4: OPC-UA
 driver=0
+
+[GPIO]
+chip=gpiochip4

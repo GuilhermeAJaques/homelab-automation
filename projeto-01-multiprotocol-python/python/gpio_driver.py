@@ -2,9 +2,9 @@ import gpiod
 
 class GPIO_driver:
     # Just declare to match with other drivers
-    def __init__(self):
+    def __init__(self, chip):
         try:
-            self.chip = gpiod.Chip('gpiochip0')
+            self.chip = gpiod.Chip(chip)
         except Exception as e:
             print("Error connectiong to gpiochip0: {}".format(e)) 
 
