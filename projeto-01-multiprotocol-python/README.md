@@ -159,7 +159,7 @@ Before to start, make sure the docker containers is running.
 
 ## Simulation
 
-!\[Architecture\](images/Architecture.png)
+![Architecture](images/Architecture.png)
 
 A full simulation video can be found at:
 
