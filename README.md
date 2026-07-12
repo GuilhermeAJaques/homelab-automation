@@ -8,7 +8,7 @@ I work daily with PLC and HMI development for machine manufacturing (Siemens TIA
 
 ## Architecture
 
-![Architecture](images/architecture.png)
+![Architecture](images/Architecture.png)
 
 The repository simulates the three classic levels of an industrial automation stack:
 
