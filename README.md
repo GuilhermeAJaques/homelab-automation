@@ -20,7 +20,7 @@ The gateway supports Siemens S7, Rockwell EtherNet/IP, Modbus TCP (CODESYS), OPC
 
 ## Projects
 
-<table><tbody><tr><td>Project</td><td>Description</td></tr><tr><td>[project-00-setup](project-00-setup/)</td><td>Docker cloud stack (Portainer, InfluxDB, Grafana, Mosquitto, Node-RED, MQTT-to-InfluxDB subscriber) and Raspberry Pi base setup.</td></tr><tr><td>[project-01-multiprotocol-python](project-01-multiprotocol-python/)</td><td>Python multi-protocol IoT gateway: connects to Siemens S7, Rockwell EtherNet/IP, Modbus TCP, OPC-UA, and GPIO, and publishes to MQTT and a REST API.</td></tr></tbody></table>
+<table><tbody><tr><td>Project</td><td>Description</td></tr><tr><td><a href="project-00-setup/">project-00-setup</a></td><td>Docker cloud stack (Portainer, InfluxDB, Grafana, Mosquitto, Node-RED, MQTT-to-InfluxDB subscriber) and Raspberry Pi base setup.</td></tr><tr><td><a href="project-01-multiprotocol-python/">project-01-multiprotocol-python</a></td><td>Python multi-protocol IoT gateway: connects to Siemens S7, Rockwell EtherNet/IP, Modbus TCP, OPC-UA, and GPIO, and publishes to MQTT and a REST API.</td></tr></tbody></table>
 
 Each project folder has its own README with detailed setup and configuration instructions.
 
