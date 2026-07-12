@@ -19,6 +19,18 @@ A new folder on /python/connections/ must be created with name Connection\_N (N 
 
 #### GPIO
 
+##### Driver.txt
+
+Select driver number with 0
+
+*   chip: GPIO full path name (For Raspbarry PI 3 Model B+ is /dev/gpiochip0)
+
+##### Variable.csv
+
+*   Column A/1: GPIO number
+*   Column B/2: MQTT topic
+*   Column C/3: Access mode. w: Only write/Digital output, r: Only read/Digital input. (It's case sensitive)
+
 #### Siemens S7 connection
 
 ##### Driver.txt
@@ -146,6 +158,8 @@ Before to start, make sure the docker containers is running.
 6.  python main.py
 
 ## Simulation
+
+!\[Architecture\](images/Architecture.png)
 
 A full simulation video can be found at:
 
