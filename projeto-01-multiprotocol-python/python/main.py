@@ -78,15 +78,12 @@ def main():
             
             # Check if has a value from driver
             if var["Value"] is not None:
-                print(var["Topic"])
                 mqtt_client.publish(topic=var["Topic"], message=payload)
         
-        print("New cycle")
         time.sleep(general_conf.cycle)
 
     mqtt_client.disconnect()
     connection.disconnect_all()
-    print("Collector stopped.")
 
 if __name__ == "__main__":
     main()
