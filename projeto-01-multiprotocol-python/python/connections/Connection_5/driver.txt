@@ -3,4 +3,4 @@
 driver=0
 
 [GPIO]
-chip=gpiochip4
+chip=/dev/gpiochip0
