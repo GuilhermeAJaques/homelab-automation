@@ -7,6 +7,13 @@ This project is a multiprotocol IoT to collect data from field and send to a hig
 *   Field drivers: Embed IO (just digital), Siemens S7 connection, Rockwell Ethernet/IP, Codesys Modbus TCP, OPC-UA. Could be connected many connections at same device.
 *   Connections to higher level: MQTT (main connection, always must use), and REST API connection
 
+## Before to start
+
+Must be created a .env file inside MQTT folder with the structure below:
+
+MQTT\_USERNAME="MQTT User name"  
+MQTT\_PASSWORD="MQTT password"
+
 ## General Parameters
 
 The device cycle scan time can be configured at /python/generalConf.txt
@@ -158,8 +165,6 @@ Before to start, make sure the docker containers is running.
 6.  python main.py
 
 ## Simulation
-
-![Architecture](images/Architecture.png)
 
 All the PLCs has a tank simulation, the Siemens code can be found at /Siemens folder.
 

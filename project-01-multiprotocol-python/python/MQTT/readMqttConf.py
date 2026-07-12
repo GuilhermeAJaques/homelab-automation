@@ -1,7 +1,11 @@
 import configparser
+import os
+from dotenv import load_dotenv
 
 class ReadMqttConf:
     def __init__(self, config_file):
+        load_dotenv()
+
         config = configparser.ConfigParser()
         self.host = None
         self.port = None
@@ -21,7 +25,12 @@ class ReadMqttConf:
         try:
             self.host = config["broker"]["host"]
             self.port = int(config["broker"]["port"])
-            self.username = config["broker"]["username"]
-            self.password = config["broker"]["password"]
         except Exception as e:
             print("Error extracting MQTT broker parameters: {}".format(e))
+
+        # Read credentials from environment variables (.env file)
+        self.username = os.getenv("MQTT_USERNAME")
+        self.password = os.getenv("MQTT_PASSWORD")
+
+        if self.username is None or self.password is None:
+            print("Warning: MQTT credentials not found in environment variables")

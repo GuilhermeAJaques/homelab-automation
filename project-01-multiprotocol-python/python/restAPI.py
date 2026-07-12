@@ -9,7 +9,7 @@ def create_app(connection):
         return jsonify(variables)
 
     @app.route('/variable/<path:topic>', methods=['GET'])
-    def get_variable(topic):  # era "name", agora é "topic"
+    def get_variable(topic):
         variables = connection.read_variables_all()
         for var in variables:
             if var["Topic"] == topic:
