@@ -161,8 +161,6 @@ Before to start, make sure the docker containers is running.
 
 ![Architecture](images/Architecture.png)
 
-A full simulation video can be found at:
-
 All the PLCs has a tank simulation, the Siemens code can be found at /Siemens folder.
 
 Three PLCs running at same time in simulation environment:
