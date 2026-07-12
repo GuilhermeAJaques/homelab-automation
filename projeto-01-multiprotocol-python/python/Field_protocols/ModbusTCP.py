@@ -42,6 +42,7 @@ class ModbusTCP:
         try:
             if not self.connected:
                 print("Not connecdted to Modbus TCP server.")
+                self.__reconnect()
                 return None
             
             fc, address = self.__getAddressAndReadType(fullAddress, 'r')
