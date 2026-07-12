@@ -8,7 +8,7 @@ I work daily with PLC and HMI development for machine manufacturing (Siemens TIA
 
 ## Architecture
 
-![Architecture](images/Architecture.png)
+![Architecture](images/imgArchitecture.png)
 
 The repository simulates the three classic levels of an industrial automation stack:
 
@@ -26,19 +26,19 @@ Each project folder has its own README with detailed setup and configuration ins
 
 ## Dashboard
 
-![Grafana dashboard](images/grafana-dashboard.png)
+![Grafana dashboard](images/imggrafana-dashboard.png)
 
 Live data from all three simulated PLCs (Siemens, Rockwell, CODESYS) and GPIO, visualized in Grafana via InfluxDB.
 
 ## Operator screen (Node-RED)
 
-![Node-RED flow](images/nodered-flow.png)
+![Node-RED flow](images/imgnodered-flow.png)
 
 Node-RED runs as the front-end/operation terminal, subscribing to the same MQTT data stream used by the historian.
 
 ## REST API
 
-![Postman](images/postman-api.png)
+![Postman](images/imgpostman-api.png)
 
 The edge device also exposes a REST API to read and write variables directly, independent of the MQTT stream. The example above shows the `GET /variables` route returning all configured variables; the API also supports `GET /variable/<topic>` for a single variable and `POST /write` to write a value. Full route details are documented in the [project-01 README](project-01-multiprotocol-python/).
 
