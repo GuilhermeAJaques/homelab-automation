@@ -65,7 +65,7 @@ class ConnectionManager:
                                 reader = csv.reader(file, delimiter=';')
                                 for row in reader:
                                     variable = {
-                                        "Name": str(row[0]),
+                                        "Name": str(row[1]),
                                         "GPIO": int(row[0]),
                                         "Topic": row[1],
                                         "Access": row[2]
