@@ -4,5 +4,5 @@ driver=3
 
 # Only need to fill the parameters for the driver selected
 [Modbus TCP]
-ip=192.168.15.151
+ip=192.168.0.151
 port=502

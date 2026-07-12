@@ -4,6 +4,6 @@ driver=1
 
 # Only need to fill the parameters for the driver selected
 [Siemens S7]
-ip=192.168.15.200
+ip=192.168.0.200
 rack=0
 slot=1
