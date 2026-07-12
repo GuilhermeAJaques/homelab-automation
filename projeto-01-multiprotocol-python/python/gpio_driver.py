@@ -15,7 +15,7 @@ class GPIO_driver:
                                      consumer="reader",
                                      config={gpio_number: gpiod.LineSettings(direction=Direction.INPUT)}) as request:
                 value = request.get_value(gpio_number)
-                return value
+                return value == Value.ACTIVE
         except Exception as e:
             print("Error to read {}: {}".format(gpio_number, e)) 
             return None
