@@ -1,3 +1,3 @@
 [General parameters]
  # Scan cycle in milliseconds
-scanCycle=1000
+scanCycle=5000
