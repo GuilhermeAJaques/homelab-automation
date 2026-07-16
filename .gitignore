@@ -5,5 +5,5 @@ __pycache__/
 *.out
 build/
 PLC Simulation/
-projeto-00-setup/docker/mosquitto/config/passwd
-projeto-00-setup/docker/mosquitto/config/passwd.backup.pflCEN
+project-00-setup/docker/mosquitto/config/passwd
+project-00-setup/docker/mosquitto/config/passwd.backup.pflCEN
