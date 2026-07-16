@@ -10,10 +10,12 @@ typedef struct {
     char password[100];
     MQTTClient client;
     int connected;
-} MQTTTClientWrapper;
+} MQTTClientWrapper;
 
 void mqtt_init(MQTTClientWrapper *wrapper, const char *host, int port, const char *username, const char *password);
 int mqtt_connect(MQTTClientWrapper *wrapper);
 void mqtt_disconnect(MQTTClientWrapper *wrapper);
+int mqtt_publish(MQTTClientWrapper *wrapper, const char *topic, const char *payload);
+int mqtt_subscribe(MQTTClientWrapper *wrapper, const char *topic);
 
 #endif
