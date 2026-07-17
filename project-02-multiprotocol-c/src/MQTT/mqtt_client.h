@@ -5,6 +5,8 @@
 
 typedef void (*MessageCallback)(char *topic, char *payload); // Used to create memory area
 
+#define MAX_TOPICS 20
+
 typedef struct {
     char host[100];
     int port;
@@ -13,6 +15,10 @@ typedef struct {
     MQTTClient client;
     int connected;
     MessageCallback on_message_callback;
+
+    // MQTT subscribed topics, used in reconection case
+    char subscribed_topics[MAX_TOPICS][100];
+    int topic_count;
 } MQTTClientWrapper;
 
 void mqtt_init(MQTTClientWrapper *wrapper, const char *host, int port, const char *username, const char *password);

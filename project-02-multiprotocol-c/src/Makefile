@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall
-LDFLAGS = -lpaho-mqtt3c
+LDFLAGS = -lpaho-mqtt3c -lpthread
 
 SOURCES = main.c MQTT/mqtt_client.c config_reader/config_reader.c
 TARGET = IoT_C
