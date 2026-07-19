@@ -6,7 +6,6 @@
 
 // Declare methods used above
 static int on_message_arrived(void *context, char *topicName, int topicLen, MQTTClient_message *message);
-static void mqtt_reconnect_loop(MQTTClientWrapper *wrapper);
 static void on_connection_lost(void *context, char *cause);
 static void *reconnect_thread(void *arg);
 
@@ -147,7 +146,7 @@ static void *reconnect_thread(void *arg)
     MQTTClientWrapper *wrapper = (MQTTClientWrapper *)arg;
 
     MQTTClient_destroy(&wrapper->client);
-    int rc = mqtt_connect(wrapper);
+    mqtt_connect(wrapper);
 
     printf("Reconnected successfully\n");
 

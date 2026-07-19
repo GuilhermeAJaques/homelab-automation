@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 
 void to_lowercase(char *str)
 {
