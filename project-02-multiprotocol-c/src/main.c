@@ -1,5 +1,5 @@
 #include "MQTT/mqtt_client.h"
-#include "config_reader/config_reader.h"
+#include "generalFunctions/config_reader/config_reader.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,11 +23,10 @@ int main()
     char password[20];
     
     // Read files
-    get_config_value(mqttConfFile, "host", host, 20);
-    get_config_value(mqttConfFile, "port", portStr, 20);
-    get_config_value(mqttCredFile, "MQTT_USERNAME", username, 20);
-    get_config_value(mqttCredFile, "MQTT_PASSWORD", password, 20);
-
+    get_config_value(mqttConfFile, "host", host, sizeof(host));
+    get_config_value(mqttConfFile, "port", portStr, sizeof(portStr));
+    get_config_value(mqttCredFile, "MQTT_USERNAME", username, sizeof(username));
+    get_config_value(mqttCredFile, "MQTT_PASSWORD", password, sizeof(password));
     int port = atoi(portStr); // Convert to integer
 
     // Start MQTT

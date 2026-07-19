@@ -19,6 +19,7 @@ void mqtt_init(MQTTClientWrapper *wrapper, const char *host, int port, const cha
     strcpy(wrapper->password, password);
     wrapper->connected = 0;
     wrapper->on_message_callback = NULL;
+    wrapper->topic_count = 0;
 }
 
 int mqtt_connect(MQTTClientWrapper *wrapper)
