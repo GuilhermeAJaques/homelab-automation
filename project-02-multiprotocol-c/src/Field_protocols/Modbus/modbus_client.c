@@ -8,6 +8,7 @@
 
 
 // Declare functions
+static void is_not_connected(ModbusClientWrapper *wrapper, int err);
 static Modbus_Address_FC getAddress_FC(char *fullAddress, int access);
 static int get_dt_size(const char *datatype);
 static void convert_to_string(uint16_t registers[50],const char *datatype, char *value, int max_len);
@@ -59,6 +60,13 @@ void modbus_client_disconnect(ModbusClientWrapper *wrapper)
 
 int modbus_client_read(ModbusClientWrapper *wrapper, const char *address, const char *datatype, char *value, int max_len)
 {
+    if (!wrapper->connected)
+    {
+        // If not connected yed, connect
+        // This flow is more commom for recconection cases
+        modbus_client_connect(wrapper);
+    }
+
     Modbus_Address_FC addr_fc = getAddress_FC((char *)address, MODBUS_ACCESS_READ);
 
     if (addr_fc.fc == -1)
@@ -97,6 +105,7 @@ int modbus_client_read(ModbusClientWrapper *wrapper, const char *address, const 
     if (rc == -1)
     {
         printf("Error reading Modbus address %s: %s\n", address, modbus_strerror(errno));
+        is_not_connected(wrapper, errno);
         return 0;
     }
     else
@@ -116,6 +125,13 @@ int modbus_client_read(ModbusClientWrapper *wrapper, const char *address, const 
 
 int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const char *datatype, const char *value)
 {
+    if (!wrapper->connected)
+    {
+        // If not connected yed, connect
+        // This flow is more commom for recconection cases
+        modbus_client_connect(wrapper);
+    }
+
     Modbus_Address_FC addr_fc = getAddress_FC((char *)address, MODBUS_ACCESS_WRITE);
 
     if (addr_fc.fc == -1)
@@ -165,9 +181,25 @@ int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const
     if (rc == -1)
     {
         printf("Error writing Modbus address %s: %s\n", address, modbus_strerror(errno));
+        is_not_connected(wrapper, errno);
         return 0;
     }
     return 1;
+}
+
+static void is_not_connected(ModbusClientWrapper *wrapper, int err)
+{
+    if (err == ECONNRESET || // Connection reseted
+        err == ETIMEDOUT ||  // Timeout
+        err == EPIPE ||  // Connection broken
+        err == ECONNREFUSED) // Connection refused
+    {
+        printf("Connection lost, attempting to reconnect...\n");
+        wrapper->connected = 0;
+        modbus_close(wrapper->client);
+        modbus_free(wrapper->client);
+        modbus_client_connect(wrapper);
+    }
 }
 
 static Modbus_Address_FC getAddress_FC(char *fullAddress, int access)
@@ -254,7 +286,7 @@ static Modbus_Address_FC getAddress_FC(char *fullAddress, int access)
     const char *address_part = fullAddress + 3;
 
     // Check if has '.'
-    char *dot_pos = strchr(address_part, '.');
+    const char *dot_pos = strchr(address_part, '.');
     if (dot_pos != NULL)
     {
         int byte_len = dot_pos - address_part;
@@ -687,7 +719,7 @@ static void convert_from_string(const char *value,const char *datatype, uint16_t
     }
     else if (strcmp(dt, "lword") == 0)
     {
-        uint64_t val = atoi(value);
+        uint64_t val = atoll(value);
         uint64_t out = (uint64_t)val;
 
         registers[0] = out & 0xFFFF;
@@ -697,7 +729,7 @@ static void convert_from_string(const char *value,const char *datatype, uint16_t
     }
     else if (strcmp(dt, "lint") == 0)
     {
-        int64_t val = atoi(value);
+        int64_t val = atoll(value);
         int64_t out = (int64_t)val;
 
         registers[0] = out & 0xFFFF;
