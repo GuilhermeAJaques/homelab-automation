@@ -7,6 +7,7 @@ SOURCES = main.c \
           Field_protocols/Modbus/modbus_client.c \
           Field_protocols/EthernetIP/ethernet_client.c \
           Field_protocols/S7/s7_client.c \
+          Field_protocols/OPCUA/opc-ua_client.c \
           generalFunctions/config_reader/config_reader.c \
           generalFunctions/string_functions/string_functions.c
 
