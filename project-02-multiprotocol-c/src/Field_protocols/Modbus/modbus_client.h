@@ -21,8 +21,8 @@ typedef struct {
 
 void modbus_client_init(ModbusClientWrapper *wrapper, const char *ip, int port);
 int modbus_client_connect(ModbusClientWrapper *wrapper);
+void modbus_client_disconnect(ModbusClientWrapper *wrapper);
 int modbus_client_read(ModbusClientWrapper *wrapper, const char *address, const char *datatype, char *value, int max_len);
 int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const char *datatype, const char *value);
-void modbus_client_disconnect(ModbusClientWrapper *wrapper);
 
 #endif
