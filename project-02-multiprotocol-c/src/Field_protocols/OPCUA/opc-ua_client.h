@@ -3,10 +3,19 @@
 
 #include <open62541.h>
 
+#define MAX_CACHED_NODES 100
+
+typedef struct {
+    char variableName[100];
+    UA_NodeId nodeId;
+} CachedNode;
+
 typedef struct {
     char url[100];
     int connected;
     UA_Client *client;
+    CachedNode cache[MAX_CACHED_NODES];
+    int cacheCount;
 } OPCClientWrapper;
 
 void opc_client_init(OPCClientWrapper *wrapper, const char *url);

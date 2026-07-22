@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -I. -std=gnu99 -fcommon
-LDFLAGS = -lpaho-mqtt3c -lpthread -lmodbus -lplctag -lsnap7 -Wl,--allow-multiple-definition
+LDFLAGS = -lpaho-mqtt3c -lpthread -lmodbus -lplctag -lsnap7 -Wl,--allow-multiple-definition -lopen62541
 
 SOURCES = main.c \
           MQTT/mqtt_client.c \

@@ -2,7 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 
-static int find_node(UA_Client *client, UA_NodeId startNode, const char *variableName, UA_NodeId *foundNode, int depth);
+static int is_connected(OPCClientWrapper *wrapper);
+static int find_node(OPCClientWrapper *wrapper, UA_NodeId startNode, const char *variableName, UA_NodeId *foundNode, int depth);
 static void convert_to_string(UA_Variant *variant, char *value, int max_len);
 static void convert_from_string(const char *value, UA_Variant *originalVariant, UA_Variant *outVariant);
 
@@ -11,6 +12,7 @@ void opc_client_init(OPCClientWrapper *wrapper, const char *url)
     wrapper->client = UA_Client_new();
     strcpy(wrapper->url, url);
     wrapper->connected = 0;
+    wrapper->cacheCount = 0;
 }
 
 int opc_client_connect(OPCClientWrapper *wrapper)
@@ -48,10 +50,23 @@ void opc_client_disconnect(OPCClientWrapper *wrapper)
 
 int opc_client_read(OPCClientWrapper *wrapper, char *variableName, char *value, int max_len)
 {
+    if (!is_connected(wrapper))
+    {
+        printf("Connection lost, attempting to reconnect...\n");
+        UA_Client_disconnect(wrapper->client);
+        int rc = UA_Client_connect(wrapper->client, wrapper->url);
+        if (rc != UA_STATUSCODE_GOOD)
+        {
+            printf("Reconnect failed\n");
+            return -1;
+        }
+        wrapper->connected = 1;
+    }
+
     // Start a recursice search to get node ID
     UA_NodeId node;
     UA_NodeId startNode = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER);
-    int rc = find_node(wrapper->client, startNode, variableName, &node, 0);
+    int rc = find_node(wrapper, startNode, variableName, &node, 0);
     if (rc == 0)
     {
         printf("Variable %s not found\n", variableName);
@@ -77,10 +92,23 @@ int opc_client_read(OPCClientWrapper *wrapper, char *variableName, char *value, 
 
 int opc_client_write(OPCClientWrapper *wrapper, char *variableName,const char *value)
 {
+    if (!is_connected(wrapper))
+    {
+        printf("Connection lost, attempting to reconnect...\n");
+        UA_Client_disconnect(wrapper->client);
+        int rc = UA_Client_connect(wrapper->client, wrapper->url);
+        if (rc != UA_STATUSCODE_GOOD)
+        {
+            printf("Reconnect failed\n");
+            return -1;
+        }
+        wrapper->connected = 1;
+    }
+
     // Start a recursice search to get node ID
     UA_NodeId node;
     UA_NodeId startNode = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER);
-    int rc = find_node(wrapper->client, startNode, variableName, &node, 0);
+    int rc = find_node(wrapper, startNode, variableName, &node, 0);
     if (rc == 0)
     {
         printf("Variable %s not found\n", variableName);
@@ -115,12 +143,31 @@ int opc_client_write(OPCClientWrapper *wrapper, char *variableName,const char *v
     return rc;
 }
 
-static int find_node(UA_Client *client, UA_NodeId startNode, const char *variableName, UA_NodeId *foundNode, int depth)
+static int is_connected(OPCClientWrapper *wrapper)
+{
+    UA_SessionState sessionState;
+    UA_Client_getState(wrapper->client, NULL, &sessionState, NULL);
+    return sessionState == UA_SESSIONSTATE_ACTIVATED;
+}
+
+static int find_node(OPCClientWrapper *wrapper, UA_NodeId startNode, const char *variableName, UA_NodeId *foundNode, int depth)
 {
     // Check recursive deep
     if (depth > 20) 
     {
         return 0;
+    }
+
+    if (depth == 0) // Just execute in the first run
+    {
+        for (int i = 0; i < wrapper->cacheCount; i++)
+        {
+            if (strcmp(wrapper->cache[i].variableName, variableName) == 0)
+            {
+                UA_NodeId_copy(&wrapper->cache[i].nodeId, foundNode);
+                return 1;
+            }
+        }
     }
 
     // Create instance for method to browse variable
@@ -131,34 +178,59 @@ static int find_node(UA_Client *client, UA_NodeId startNode, const char *variabl
     bd.includeSubtypes = true;
     bd.nodeClassMask = UA_NODECLASS_UNSPECIFIED;
     bd.resultMask = UA_BROWSERESULTMASK_ALL;
-    UA_BrowseResult result = UA_Client_browse(client, NULL, 0, &bd);
-    
+    UA_BrowseResult result = UA_Client_browse(wrapper->client, NULL, 0, &bd);
     // Get desired node name
     UA_String targetName = UA_STRING((char *)variableName);
 
     // Start to search in all childs of the current node
     int found = 0;
-    for (size_t i = 0; i < result.referencesSize && !found; i++)
+    int keepGoing = 1;
+    while (keepGoing && !found)
     {
-        // Get current node
-        UA_ReferenceDescription *ref = &result.references[i];
-
-        // Check if the name match
-        if (targetName.length == ref->browseName.name.length &&
-            strncmp((char *)targetName.data, (char *)ref->browseName.name.data, targetName.length) == 0)
+        // Pass by each child inside the current node
+        for (size_t i = 0; i < result.referencesSize && !found; i++)
         {
-            *foundNode = ref->nodeId.nodeId;
-            found = 1;
+            // Get current node name
+            UA_ReferenceDescription *ref = &result.references[i];
+
+            // If match the node ID name
+            if (targetName.length == ref->browseName.name.length &&
+                strncmp((char *)targetName.data, (char *)ref->browseName.name.data, targetName.length) == 0)
+            {
+                UA_NodeId_copy(&ref->nodeId.nodeId, foundNode);
+                
+                // Save in cache
+                if (wrapper->cacheCount < MAX_CACHED_NODES)
+                {
+                    UA_NodeId_copy(&ref->nodeId.nodeId, &wrapper->cache[wrapper->cacheCount].nodeId);
+                    strcpy(wrapper->cache[wrapper->cacheCount].variableName, variableName);
+                    wrapper->cacheCount += 1;
+                }
+
+                found = 1;
+            }
+            else
+            {
+                // If not match node name, but the node has childs starts a recursion
+                if (ref->nodeClass == UA_NODECLASS_OBJECT)
+                {
+                    UA_NodeId childNode = ref->nodeId.nodeId;
+                    found = find_node(wrapper, childNode, variableName, foundNode, depth + 1);
+                }
+            }
+        }
+
+        // If not found in the recursion, but this node ID has more childs, check each of then
+        // This is needed because this librarie separate the childs in more than one group
+        if (!found && result.continuationPoint.length > 0)
+        {
+            UA_BrowseResult nextResult = UA_Client_browseNext(wrapper->client, false, result.continuationPoint);
+            UA_BrowseResult_clear(&result);
+            result = nextResult;
         }
         else
         {
-            // If not match
-            if (ref->nodeClass == UA_NODECLASS_OBJECT)
-            {
-                // If node has childs
-                UA_NodeId childNode = ref->nodeId.nodeId;
-                found = find_node(client, childNode, variableName, foundNode, depth + 1);
-            }
+            keepGoing = 0;
         }
     }
 

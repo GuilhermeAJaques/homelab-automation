@@ -3,6 +3,7 @@
 #include "Field_protocols/EthernetIP/ethernet_client.h"
 #include "Field_protocols/Modbus/modbus_client.h"
 #include "Field_protocols/S7/s7_client.h"
+#include "Field_protocols/OPCUA/opc-ua_client.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,9 +49,7 @@ int main()
     char message[100] = "";
     while (1)
     {
-        if (strcmp(message, "exit") == 0) {
-            break;
-        }
+        
     }
 
     mqtt_disconnect(&MQTT_wrapper);
