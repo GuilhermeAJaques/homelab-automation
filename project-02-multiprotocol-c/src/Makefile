@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -I. -std=gnu99 -fcommon
-LDFLAGS = -lpaho-mqtt3c -lpthread -lmodbus -lplctag -lsnap7 -Wl,--allow-multiple-definition -lopen62541
+LDFLAGS = -lpaho-mqtt3c -lpthread -lmodbus -lplctag -lsnap7 -Wl,--allow-multiple-definition -lopen62541 -lgpiod
 
 SOURCES = main.c \
           MQTT/mqtt_client.c \
@@ -8,6 +8,7 @@ SOURCES = main.c \
           Field_protocols/EthernetIP/ethernet_client.c \
           Field_protocols/S7/s7_client.c \
           Field_protocols/OPCUA/opc-ua_client.c \
+          GPIO/gpio.c \
           generalFunctions/config_reader/config_reader.c \
           generalFunctions/string_functions/string_functions.c
 
