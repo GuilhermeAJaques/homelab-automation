@@ -1,0 +1,7 @@
+setpoint;REAL;ethernetip/setpoint;w
+temperature;REAL;ethernetip/temperature;r
+valve_open;BOOL;ethernetip/valve_open;r
+agitator_on;BOOL;ethernetip/agitator_on;r
+batch_count;INT;ethernetip/batch_count;r
+status;STRING;ethernetip/status;r
+start_command;BOOL;ethernetip/start_command;w

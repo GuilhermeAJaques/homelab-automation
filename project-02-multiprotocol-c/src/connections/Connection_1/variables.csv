@@ -1,0 +1,7 @@
+1;setpoint;Real;0.0;s7/setpoint;w
+1;temperature;Real;4.0;s7/temperature;r
+1;valve_open;Bool;8.0;s7/valve_open;r
+1;agitator_on;Bool;8.1;s7/agitator_on;r
+1;batch_count;Int;10.0;s7/batch_count;r
+1;status;String;12.0;s7/status;r
+1;start_command;Bool;268.0;s7/start_command;w

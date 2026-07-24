@@ -1,0 +1,7 @@
+setpoint;ethernetip/setpoint;w
+temperature;ethernetip/temperature;r
+valve_open;ethernetip/valve_open;r
+agitator_on;ethernetip/agitator_on;r
+batch_count;ethernetip/batch_count;r
+status;ethernetip/status;r
+start_command;ethernetip/start_command;w

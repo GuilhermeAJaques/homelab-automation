@@ -1,0 +1,7 @@
+setpoint;%QD0;REAL;modbus/setpoint;w
+temperature;%QD4;REAL;modbus/temperature;r
+valve_open;%QX8.0;BOOL;modbus/valve_open;r
+agitator_on;%QX8.1;BOOL;modbus/agitator_on;r
+batch_count;%QW5;INT;modbus/batch_count;r
+status;%QB30;STRING;modbus/status;r
+start_command;%QX8.2;BOOL;modbus/start_command;w

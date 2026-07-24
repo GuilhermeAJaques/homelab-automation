@@ -1,0 +1,7 @@
+setpoint;opc/setpoint;w
+temperature;opc/temperature;r
+valve_open;opc/valve_open;r
+agitator_on;opc/agitator_on;r
+batch_count;opc/batch_count;r
+status;opc/status;r
+start_command;opc/start_command;w

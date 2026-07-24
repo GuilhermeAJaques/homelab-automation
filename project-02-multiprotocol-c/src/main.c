@@ -1,21 +1,24 @@
 #include "MQTT/mqtt_client.h"
+#include "Connection_Manager/connection_manager.h"
 #include "generalFunctions/config_reader/config_reader.h"
-#include "Field_protocols/EthernetIP/ethernet_client.h"
-#include "Field_protocols/Modbus/modbus_client.h"
-#include "Field_protocols/S7/s7_client.h"
-#include "Field_protocols/OPCUA/opc-ua_client.h"
-#include "GPIO/gpio.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+ConnectionManager manager;
+
 void mqtt_calback(char *topic, char *payload)
 {
-    printf("Received MQTT message %s: %s\n", topic, payload);
+    connection_manager_write(&manager, topic, payload);
 }
 
 int main()
 {
+    // ===============================================
+    // ============ Connection manager ===============
+    // ===============================================
+    connection_manager_init(&manager);
+    connection_manager_connect(&manager);
 
     // ===============================================
     // ===================== MQTT ====================
@@ -44,26 +47,19 @@ int main()
     mqtt_connect(&MQTT_wrapper);
     mqtt_subscribe(&MQTT_wrapper, "#");
 
-    GPIOClientWrapper gpio_wrapper;
-    gpio_client_init(&gpio_wrapper, "/dev/gpiochip0");
-    gpio_client_connect(&gpio_wrapper);
 
     // ===============================================
     // ==================== Cycle ====================
     // ===============================================
-    //char message[100] = "";
     while (1)
     {
-        char tmpValue[100];
-
-        if (gpio_client_read(&gpio_wrapper, 4, tmpValue, sizeof(tmpValue)))
-            printf("GPIO4: %s\n", tmpValue);
-
-        printf("Entry value for GPIO6: ");
-        char message[100];
-        fgets(message, sizeof(message), stdin);
-        message[strcspn(message, "\n")] = '\0';
-        gpio_client_write(&gpio_wrapper, 6, message);
+        connection_manager_read_all(&manager);
+        for (int i = 0; i < manager.totalVariables; i++)
+        {
+            mqtt_publish(&MQTT_wrapper, 
+                         manager.returnValues[i].topic, 
+                         manager.returnValues[i].value);
+        }
     }
 
     mqtt_disconnect(&MQTT_wrapper);

@@ -1,0 +1,8 @@
+[Settings]
+# Driver options: 0: GPIO; 1: Siemens S7; 2: Rockwell Ethernet/IP; 3: Modbus TCP; 4: OPC-UA
+driver=3
+
+# Only need to fill the parameters for the driver selected
+[Modbus TCP]
+ip=192.168.15.151
+port=502
