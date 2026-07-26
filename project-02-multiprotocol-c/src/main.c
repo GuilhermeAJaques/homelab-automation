@@ -9,16 +9,23 @@
 #include <time.h>
 #include <pthread.h>
 #include <ctype.h>
+#include <signal.h>
 
 ConnectionManager manager;
 pthread_mutex_t connection_mutex = PTHREAD_MUTEX_INITIALIZER;
+static volatile int running = 1;
 
 static void mqtt_calback(char *topic, char *payload);
 static void get_iso_timestamp(char *buffer, int max_len);
 static int is_numeric_or_bool(const char *value);
+void handle_stop(int signum);
 
 int main()
 {
+    // Commands to stop service
+    signal(SIGINT, handle_stop);
+    signal(SIGTERM, handle_stop);
+
     // ===============================================
     // ============ Connection manager ===============
     // ===============================================
@@ -70,11 +77,14 @@ int main()
     char cycleStr[10];
     get_config_value("generalConf.txt", "cycle", cycleStr, sizeof(cycleStr));
     int cycleMs = atoi(cycleStr);
-    while (1)
+    while (running)
     {
+        // Get all variables
         pthread_mutex_lock(&connection_mutex);
         connection_manager_read_all(&manager);
         pthread_mutex_unlock(&connection_mutex);
+
+        // Send all variables to MQTT broker
         for (int i = 0; i < manager.totalVariables; i++)
         {
             char timestamp[30];
@@ -147,4 +157,10 @@ static int is_numeric_or_bool(const char *value)
     }
 
     return hasDigit;
+}
+
+void handle_stop(int signum)
+{
+    running = 0;
+    printf("Stopping collector...\n");
 }
