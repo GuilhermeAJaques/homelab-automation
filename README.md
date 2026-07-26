@@ -20,7 +20,7 @@ The gateway supports Siemens S7, Rockwell EtherNet/IP, Modbus TCP (CODESYS), OPC
 
 ## Projects
 
-<table><tbody><tr><td>Project</td><td>Description</td></tr><tr><td><a href="project-00-setup/">project-00-setup</a></td><td>Docker cloud stack (Portainer, InfluxDB, Grafana, Mosquitto, Node-RED, MQTT-to-InfluxDB subscriber) and Raspberry Pi base setup.</td></tr><tr><td><a href="project-01-multiprotocol-python/">project-01-multiprotocol-python</a></td><td>Python multi-protocol IoT gateway: connects to Siemens S7, Rockwell EtherNet/IP, Modbus TCP, OPC-UA, and GPIO, and publishes to MQTT and a REST API.</td></tr></tbody></table>
+<table><tbody><tr><td>Project</td><td>Description</td></tr><tr><td><a href="project-00-setup/">project-00-setup</a></td><td>Docker cloud stack (Portainer, InfluxDB, Grafana, Mosquitto, Node-RED, MQTT-to-InfluxDB subscriber) and Raspberry Pi base setup.</td></tr><tr><td><a href="project-01-multiprotocol-python/">project-01-multiprotocol-python</a></td><td>Python multi-protocol IoT gateway: connects to Siemens S7, Rockwell EtherNet/IP, Modbus TCP, OPC-UA, and GPIO, and publishes to MQTT and a REST API.</td></tr><tr><td><a href="project-02-multiprotocol-c/">project-02-multiprotocol-c</a></td><td>The same gateway reimplemented from scratch in C, working directly against each protocol's native library instead of a high-level automation framework, with the same MQTT and REST API surface.</td></tr></tbody></table>
 
 Each project folder has its own README with detailed setup and configuration instructions.
 
@@ -40,7 +40,7 @@ Node-RED runs as the front-end/operation terminal, subscribing to the same MQTT 
 
 ![Postman](images/imgpostman-api.png)
 
-The edge device also exposes a REST API to read and write variables directly, independent of the MQTT stream. The example above shows the `GET /variables` route returning all configured variables; the API also supports `GET /variable/<topic>` for a single variable and `POST /write` to write a value. Full route details are documented in the [project-01 README](project-01-multiprotocol-python/).
+The edge device also exposes a REST API to read and write variables directly, independent of the MQTT stream. The example above shows the `GET /variables` route returning all configured variables; the API also supports `GET /variable/<topic>` for a single variable and `POST /write` to write a value. Both the Python and the C implementation expose the same three routes; full details are documented in each project's own README (project-01, project-02).
 
 ## Status and roadmap
 
@@ -50,9 +50,10 @@ This project is under active development.
 
 *   Docker cloud stack: Portainer, InfluxDB, Grafana, Mosquitto, Node-RED, and a custom MQTT-to-InfluxDB subscriber.
 *   Python multi-protocol gateway: Siemens S7, Rockwell EtherNet/IP, Modbus TCP, OPC-UA, and GPIO, all running concurrently on a single Raspberry Pi 3.
-*   MQTT publish/subscribe and a REST API (read and write) on the edge device.
+*   C multi-protocol gateway: the same five protocols reimplemented from scratch in C, directly against each protocol's native library, with its own connection manager, MQTT bridge, and REST API, running on the same hardware.
+*   MQTT publish/subscribe and a REST API (read and write) on the edge device, in both implementations.
 *   Grafana dashboards per protocol.
 
 **Next:**
 
-*   Reimplementing the field-level drivers in C, as a comparison to the current Python implementation.
+*   Structured, persistent local logging on the Raspberry Pi (replacing console output).
