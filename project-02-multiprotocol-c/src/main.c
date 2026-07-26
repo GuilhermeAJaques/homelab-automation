@@ -1,6 +1,7 @@
 #include "MQTT/mqtt_client.h"
 #include "Connection_Manager/connection_manager.h"
 #include "generalFunctions/config_reader/config_reader.h"
+#include "rest_api/rest_api.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +24,13 @@ int main()
     // ===============================================
     connection_manager_init(&manager);
     connection_manager_connect(&manager);
+
+    // ===============================================
+    // ================== Rest API ===================
+    // ===============================================
+
+    RestApiWrapper rest_api;
+    rest_api_start(&rest_api, &manager, &connection_mutex, 5000);
 
     // ===============================================
     // ===================== MQTT ====================
@@ -98,6 +106,7 @@ int main()
         usleep(cycleMs * 1000);
     }
 
+    rest_api_stop(&rest_api);
     mqtt_disconnect(&MQTT_wrapper);
     return 0;
 }

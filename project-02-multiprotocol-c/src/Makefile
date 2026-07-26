@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -I. -std=gnu99 -fcommon -g -DUA_LOGLEVEL=600
-LDFLAGS = -lpaho-mqtt3c -lpthread -lmodbus -lplctag -lsnap7 -Wl,--allow-multiple-definition -lopen62541 -lgpiod
+LDFLAGS = -lpaho-mqtt3c -lpthread -lmodbus -lplctag -lsnap7 -Wl,--allow-multiple-definition -lopen62541 -lgpiod -lmicrohttpd
 
 SOURCES = main.c \
           MQTT/mqtt_client.c \
@@ -11,7 +11,8 @@ SOURCES = main.c \
           Connection_Manager/connection_manager.c \
           GPIO/gpio.c \
           generalFunctions/config_reader/config_reader.c \
-          generalFunctions/string_functions/string_functions.c
+          generalFunctions/string_functions/string_functions.c \
+          rest_api/rest_api.c
 
 TARGET = IoT_C
 
