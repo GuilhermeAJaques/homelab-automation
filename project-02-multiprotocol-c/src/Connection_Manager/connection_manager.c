@@ -7,7 +7,7 @@
 #define MAX_CONNECTIONS 20
 #define MAX_VARIABLES 100
 
-static int get_connections(const char *basePath, char path[][30]);
+static int get_connections(const char *basePath, char path[][300]);
 static void get_driver_parameters(Connection *conn, char *driverPath);
 static int get_variables_csv(const char *basePath, char line[][100]);
 static void get_variables_parameters(ConnectionManager *manager, Connection *conn, char lines[][100]);
@@ -17,7 +17,7 @@ static AccessType get_access_type(char *access);
 void connection_manager_init(ConnectionManager *manager)
 {
     const char basePath[100] = "connections";
-    char path[MAX_CONNECTIONS][30];
+    char path[MAX_CONNECTIONS][300];
 
     // Get connection count
     manager->connectionCount = get_connections(basePath, path);
@@ -39,7 +39,7 @@ void connection_manager_init(ConnectionManager *manager)
     for (int i = 0; i < manager->connectionCount; i++)
     {
         // Get driver txt file
-        char driverPath[40];
+        char driverPath[320];
         snprintf(driverPath, sizeof(driverPath), "%s/driver.txt", path[i]);
 
         // Get driver type
@@ -51,7 +51,7 @@ void connection_manager_init(ConnectionManager *manager)
         get_driver_parameters(&manager->connections[i], driverPath);
 
         // Get variables
-        char variablesPath[40];
+        char variablesPath[320];
         snprintf(variablesPath, sizeof(variablesPath), "%s/variables.csv", path[i]);
         char line_variable[MAX_VARIABLES][100];
         manager->connections[i].variableCount = get_variables_csv(variablesPath, line_variable);
@@ -65,6 +65,43 @@ void connection_manager_init(ConnectionManager *manager)
 
     // Allocate memory for all variable values
     manager->returnValues = malloc(manager->totalVariables * sizeof(VariableValues));
+
+    // List all subiscribed topics
+    manager->subscribeTopics = malloc(manager->subscribeTopicCount * sizeof(*manager->subscribeTopics));
+    int topicIndex = 0;
+    for (int i = 0; i < manager->connectionCount; i++)
+    {
+        Connection *conn = &manager->connections[i];
+        for (int j = 0; j < conn->variableCount; j++)
+        {
+            if (conn->variables[j].access == WRITE_ONLY)
+            {
+                char *topic = NULL;
+
+                switch (conn->type)
+                {
+                    case DRIVER_GPIO: 
+                        topic = conn->variables[j].parameters.gpio.topic; 
+                        break;
+                    case DRIVER_S7: 
+                        topic = conn->variables[j].parameters.s7.topic; 
+                        break;
+                    case DRIVER_ETHERNETIP: 
+                        topic = conn->variables[j].parameters.ethernetip.topic; 
+                        break;
+                    case DRIVER_MODBUS: 
+                        topic = conn->variables[j].parameters.modbus.topic; 
+                        break;
+                    case DRIVER_OPCUA: 
+                        topic = conn->variables[j].parameters.opcua.topic; 
+                        break;
+                }
+
+                strcpy(manager->subscribeTopics[topicIndex], topic);
+                topicIndex++;
+            }
+        }
+    }
 }
 
 void connection_manager_connect(ConnectionManager *manager)
@@ -83,7 +120,20 @@ void connection_manager_connect(ConnectionManager *manager)
                 {
                     gpio_client_init(&manager->connections[i].wrapper.gpio, 
                                     manager->connections[i].wrapper.gpio.chipPath);
-                    gpio_client_connect(&manager->connections[i].wrapper.gpio);
+
+                    int output_pins[MAX_VARIABLES];
+                    int output_count = 0;
+
+                    for (int j = 0; j < manager->connections[i].variableCount; j++)
+                    {
+                        if (manager->connections[i].variables[j].access == WRITE_ONLY)
+                        {
+                            output_pins[output_count] = manager->connections[i].variables[j].parameters.gpio.offset;
+                            output_count++;
+                        }
+                    }
+
+                    gpio_client_connect(&manager->connections[i].wrapper.gpio, output_pins, output_count);
                     break;
                 }
                 case DRIVER_S7:
@@ -291,7 +341,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only", topic);
+                                printf("Topic %s is write only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -317,7 +367,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only", topic);
+                                printf("Topic %s is write only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -342,7 +392,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only", topic);
+                                printf("Topic %s is write only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -367,7 +417,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only", topic);
+                                printf("Topic %s is write only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -391,7 +441,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only", topic);
+                                printf("Topic %s is write only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -432,7 +482,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only", topic);
+                                printf("Topic %s is read only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -453,7 +503,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only", topic);
+                                printf("Topic %s is read only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -473,7 +523,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only", topic);
+                                printf("Topic %s is read only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -493,7 +543,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only", topic);
+                                printf("Topic %s is read only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -512,7 +562,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only", topic);
+                                printf("Topic %s is read only\n", topic);
                                 finished = 1;
                             }
                         }
@@ -523,7 +573,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
     }
 }
 
-static int get_connections(const char *basePath, char path[][30])
+static int get_connections(const char *basePath, char path[][300])
 {
     // Start to search all folder inside connection
     DIR *dir = opendir(basePath);
@@ -547,7 +597,7 @@ static int get_connections(const char *basePath, char path[][30])
                 closedir(dir);
                 return count;
             }
-            snprintf(path[count], 30, "%s/%s", basePath, entry->d_name);
+            snprintf(path[count], 300, "%s/%s", basePath, entry->d_name);
             count++;
         }
     }
@@ -685,6 +735,10 @@ static void get_variables_parameters(ConnectionManager *manager, Connection *con
         if (conn->variables[i].access == READ_ONLY)
         {
             manager->totalVariables++;
+        }
+        if (conn->variables[i].access == WRITE_ONLY)
+        {
+            manager->subscribeTopicCount++;
         }
     }
 }

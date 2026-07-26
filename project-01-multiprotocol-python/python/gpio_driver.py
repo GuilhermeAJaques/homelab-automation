@@ -3,12 +3,25 @@ from gpiod.line import Direction, Value
 
 class GPIO_driver:
     # Just declare to match with other drivers
-    def __init__(self, chip):
+    def __init__(self, chip, output_pins):
         try:
             self.chip = chip
+            self.output_request = None
+
+            # Get all output pins
+            config = {}
+            for pin in output_pins:
+                config[pin] = gpiod.LineSettings(direction=Direction.OUTPUT)
+
+            if config:
+                self.output_request = gpiod.request_lines(
+                    self.chip,
+                    consumer="writer",
+                    config=config
+                )
         except Exception as e:
             print("Error connectiong to gpiochip0: {}".format(e)) 
-
+        
     def read_variable(self, gpio_number):
         try:
             with gpiod.request_lines(self.chip, 
@@ -22,14 +35,10 @@ class GPIO_driver:
 
     def write_variable(self, gpio_number, value):
         try:
-            with gpiod.request_lines(self.chip,
-                                     consumer="writer", 
-                                     config={gpio_number: gpiod.LineSettings(direction=Direction.OUTPUT)}) as request:
-                if (bool(value)):
-                    request.set_value(gpio_number, Value.ACTIVE)
-                else:
-                    request.set_value(gpio_number, Value.INACTIVE)
-
+            if bool(value):
+                self.output_request.set_value(gpio_number, Value.ACTIVE)
+            else:
+                self.output_request.set_value(gpio_number, Value.INACTIVE)
         except Exception as e:
             print("Error to write {}: {}".format(gpio_number, e)) 
 

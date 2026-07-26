@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug IoT_C",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/project-02-multiprotocol-c/src/IoT_C",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/project-02-multiprotocol-c/src",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "preLaunchTask": "build"
+        }
+    ]
+}

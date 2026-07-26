@@ -90,6 +90,8 @@ typedef struct {
     int connectionCount;
     VariableValues *returnValues;
     int totalVariables;
+    char (*subscribeTopics)[100];
+    int subscribeTopicCount;
 } ConnectionManager;
 
 void connection_manager_init(ConnectionManager *manager);

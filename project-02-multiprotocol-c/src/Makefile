@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -I. -std=gnu99 -fcommon
+CFLAGS = -Wall -I. -std=gnu99 -fcommon -g -DUA_LOGLEVEL=600
 LDFLAGS = -lpaho-mqtt3c -lpthread -lmodbus -lplctag -lsnap7 -Wl,--allow-multiple-definition -lopen62541 -lgpiod
 
 SOURCES = main.c \

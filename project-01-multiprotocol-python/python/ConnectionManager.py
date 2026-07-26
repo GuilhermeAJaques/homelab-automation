@@ -57,7 +57,8 @@ class ConnectionManager:
                         parameters = {
                             "gpio": configFile["GPIO"]["chip"]
                         }
-                        driver_instance = GPIO_driver(chip=parameters["gpio"])
+
+                        output_pins = []
 
                         # Get variables
                         try:
@@ -74,8 +75,12 @@ class ConnectionManager:
 
                                     if (variable["Access"] == "w"):
                                         self.subTopics.add(variable["Topic"])
+                                        output_pins.append(variable["GPIO"])
                         except Exception as e:
                             print("Error reading variables file: {}".format(e))
+                            
+                        # Initialize driver after read all variables to get all write variables
+                        driver_instance = GPIO_driver(chip=parameters["gpio"], output_pins=output_pins)
 
 
                     case DriverType.S7: # S7

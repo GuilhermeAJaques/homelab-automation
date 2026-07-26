@@ -3,12 +3,13 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/project-02-multiprotocol-c/src",
+                "${workspaceFolder}/project-02-multiprotocol-c/src/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
-            "cppStandard": "gnu++17",
+            "cStandard": "gnu99",
+            "cppStandard": "gnu++14",
             "intelliSenseMode": "linux-gcc-x64"
         }
     ],
