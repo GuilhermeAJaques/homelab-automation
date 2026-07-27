@@ -2,6 +2,7 @@ from pymodbus.client.sync import ModbusTcpClient
 from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.payload import BinaryPayloadBuilder
 from pymodbus.constants import Endian
+from Logger import Logger, Criticality, Class
 import math
 
 class ModbusTCP:
@@ -15,33 +16,33 @@ class ModbusTCP:
         try:
             self.connected = self.client.connect()
             if self.connected:
-                print(f"Connected to Modbus TCP server at {self.host}:{self.port}")
+                Logger.log(Class.MODBUS, Criticality.INFO ,f"Connected to Modbus TCP server at {self.host}:{self.port}")
             else:
-                print(f"Failed to connect to Modbus TCP server at {self.host}:{self.port}")
+                Logger.log(Class.MODBUS, Criticality.ERROR ,f"Failed to connect to Modbus TCP server at {self.host}:{self.port}")
         except Exception as e:
-            print(f"Error connecting to Modbus TCP server: {e}")
+            Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error connecting to Modbus TCP server: {e}")
 
     def disconnect(self):
         try:
             self.client.close()
             self.connected = False
-            print(f"Disconnected from Modbus TCP server at {self.host}:{self.port}")
+            Logger.log(Class.MODBUS, Criticality.INFO ,f"Disconnected from Modbus TCP server at {self.host}:{self.port}")
         except Exception as e:
-            print(f"Error disconnecting from Modbus TCP server: {e}")
+            Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error disconnecting from Modbus TCP server: {e}")
 
     def __reconnect(self):
         try:
             self.client.close()
             self.connected = self.client.connect()
             if self.connected:
-                print(f"Reconnected to Modbus TCP server at {self.host}:{self.port}")
+                Logger.log(Class.MODBUS, Criticality.INFO ,f"Reconnected to Modbus TCP server at {self.host}:{self.port}")
         except Exception as e:
-            print(f"Error reconnecting to Modbus TCP server: {e}")
+            Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error reconnecting to Modbus TCP server: {e}")
 
     def read_variable(self, fullAddress, datatype):
         try:
             if not self.connected:
-                print("Not connecdted to Modbus TCP server.")
+                Logger.log(Class.MODBUS, Criticality.WARNING ,"Trying to read variable without connected, start reconnection")
                 self.__reconnect()
                 return None
             
@@ -51,7 +52,7 @@ class ModbusTCP:
                 case 1:
                     response = self.client.read_coils(address, self.__getDTsize(datatype))
                     if response.isError():
-                        print(f"Error reading coils at address {address}: {response}")
+                        Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error reading coils at address {address}: {response}")
                         self.__reconnect()
                         return None
                     
@@ -60,7 +61,7 @@ class ModbusTCP:
                 case 2:
                     response = self.client.read_discrete_inputs(address, self.__getDTsize(datatype))
                     if response.isError():
-                        print(f"Error reading discrete inputs at address {address}: {response}")
+                        Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error reading discrete inputs at address {address}: {response}")
                         self.__reconnect()
                         return None
                     
@@ -69,7 +70,7 @@ class ModbusTCP:
                 case 3:
                     response = self.client.read_holding_registers(address, self.__getDTsize(datatype))
                     if response.isError():
-                        print(f"Error reading holding registers at address {address}: {response}")
+                        Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error reading holding registers at address {address}: {response}")
                         self.__reconnect()
                         return None
                     
@@ -78,34 +79,38 @@ class ModbusTCP:
                 case 4:
                     response = self.client.read_input_registers(address, self.__getDTsize(datatype))
                     if response.isError():
-                        print(f"Error reading input registers at address {address}: {response}")
+                        Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error reading input registers at address {address}: {response}")
                         self.__reconnect()
                         return None
                     
                     return self.__convert_registers(response.registers, datatype)
             
         except Exception as e:
-            print(f"Error reading ModbusTCP at address {fullAddress}: {e}")
+            Logger.log(Class.MODBUS, Criticality. ERROR,f"Error reading ModbusTCP at address {fullAddress}: {e}")
             return None
 
     def write_variable(self, fullAddress, datatype, value):
         try:
             if not self.connected:
-                print("Not connecdted to Modbus TCP server.")
+                Logger.log(Class.MODBUS, Criticality.WARNING ,"Trying to write variable without connected, start reconnection")
+                self.__reconnect()
                 return None
             
             fc, address = self.__getAddressAndReadType(fullAddress, 'w')
 
             match (fc):
                 case 5:
-                    self.client.write_coil(address, bool(value))
+                    response = self.client.write_coil(address, bool(value))
                 case 6:
-                    self.client.write_register(address, self.__convert_value(datatype, value)[0])
+                    response = self.client.write_register(address, self.__convert_value(datatype, value)[0])
                 case 16:
-                    self.client.write_registers(address, self.__convert_value(datatype, value))
+                    response = self.client.write_registers(address, self.__convert_value(datatype, value))
+
+            if response.isError():
+                Logger.log(Class.MODBUS, Criticality.ERROR, f"Error writing register at address {address}: {response}")
                     
         except Exception as e:
-            print(f"Error reading ModbusTCP at address {fullAddress}: {e}")
+            Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error writing ModbusTCP at address {fullAddress}: {e}")
             return None
         
     def __getDTsize(self, datatype):
@@ -144,17 +149,17 @@ class ModbusTCP:
                             length = int(datatype[7:-1])
                             size = math.ceil(length / 2)
                         except ValueError:
-                            print(f"Invalid string length specified: {datatype}")
+                            Logger.log(Class.MODBUS, Criticality.WARNING ,f"Invalid string length specified: {datatype}")
                             return None
                     else:
-                        print(f"Unsupported datatype: {datatype}")
+                        Logger.log(Class.MODBUS, Criticality.WARNING ,f"Unsupported datatype: {datatype}")
                         return None
                 
             # Return the size of the datatype
             return size
         
         except Exception as e:
-            print(f"Error determining size for datatype {datatype}: {e}")
+            Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error determining size for datatype {datatype}: {e}")
             return None
         
     def __convert_registers(self, register, datatype):
@@ -196,14 +201,14 @@ class ModbusTCP:
                         try:
                             return self.__organizeStringForRead(register)
                         except ValueError:
-                            print(f"Invalid string length specified: {datatype}")
+                            Logger.log(Class.MODBUS, Criticality.WARNING ,f"Invalid string length specified: {datatype}")
                             return None
                     else:
-                        print(f"Unsupported datatype: {datatype}")
+                        Logger.log(Class.MODBUS, Criticality.WARNING ,f"Unsupported datatype: {datatype}")
                         return None
         
         except Exception as e:
-            print(f"Error converting data for datatype {datatype}: {e}")
+            Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error converting data for datatype {datatype}: {e}")
             return None
 
     def __convert_value(self, datatype, value):
@@ -252,14 +257,14 @@ class ModbusTCP:
                         try:
                             return self.__organizeStringForWrite(value, self.__getDTsize(datatype))
                         except ValueError:
-                            print(f"Invalid string length specified: {datatype}")
+                            Logger.log(Class.MODBUS, Criticality.WARNING ,f"Invalid string length specified: {datatype}")
                             return None
                     else:
-                        print(f"Unsupported datatype: {datatype}")
+                        Logger.log(Class.MODBUS, Criticality.WARNING ,f"Unsupported datatype: {datatype}")
                         return None
         
         except Exception as e:
-            print(f"Error converting data for datatype {datatype}: {e}")
+            Logger.log(Class.MODBUS, Criticality.ERROR ,f"Error converting data for datatype {datatype}: {e}")
             return None
 
     def __getAddressAndReadType(self, fullAddress, access):
@@ -274,7 +279,7 @@ class ModbusTCP:
             elif prefix in ['%iw', '%id', '%ib']:
                 fc = 4
             else:
-                print(f"Unknown address prefix: {prefix}")
+                Logger.log(Class.MODBUS, Criticality.WARNING ,f"Unknown address prefix: {prefix}")
                 return None, None
         else:
             if prefix in ['%mx', '%qx', '%ix']:
@@ -284,7 +289,7 @@ class ModbusTCP:
             elif prefix in ['%md', '%qd', '%mb', '%qb', '%id', '%ib']:
                 fc = 16
             else:
-                print(f"Unknown address prefix: {prefix}")
+                Logger.log(Class.MODBUS, Criticality.WARNING ,f"Unknown address prefix: {prefix}")
                 return None, None
         
         address = fullAddress[3:]

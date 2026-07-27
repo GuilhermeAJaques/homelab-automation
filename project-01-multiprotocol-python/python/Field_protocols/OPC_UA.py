@@ -1,5 +1,6 @@
 from opcua import Client
 from opcua import ua
+from Logger import Logger, Criticality, Class
 
 class OPC_UA:
     def __init__(self, endpoint):
@@ -16,20 +17,20 @@ class OPC_UA:
         try:
             # Connect to the OPC UA server
             self.client.connect()
-            self.connected = True
-            print(f"Connected to OPC UA server at {self.endpoint}")
+            self.connected = True            
+            Logger.log(Class.OPC, Criticality.INFO ,f"Connected to OPC UA server at {self.endpoint}")
 
         except Exception as e:
-            print(f"Error connecting to OPC UA server: {e}")
+            Logger.log(Class.OPC, Criticality.ERROR ,f"Error connecting to OPC UA server: {e}")
 
     def disconnect(self):
         try:
             # Disconnect from the OPC UA server
             self.client.disconnect()
             self.connected = False
-            print(f"Disconnected from OPC UA server at {self.endpoint}")
+            Logger.log(Class.OPC, Criticality.INFO ,f"Disconnected from OPC UA server at {self.endpoint}")
         except Exception as e:
-            print(f"Error disconnecting from OPC UA server: {e}")
+            Logger.log(Class.OPC, Criticality.ERROR ,f"Error disconnecting from OPC UA server: {e}")
 
     def __reconnect(self):
         try:
@@ -40,15 +41,15 @@ class OPC_UA:
             self.client.connect()
             self._node_cache.clear()
             self.connected = True
-            print(f"Reconnected to OPC UA server at {self.endpoint}")
+            Logger.log(Class.OPC, Criticality.INFO ,f"Reconnected to OPC UA server at {self.endpoint}")
         except Exception as e:
             self.connected = False
-            print(f"Error reconnecting to OPC UA server: {e}")
+            Logger.log(Class.OPC, Criticality.ERROR ,f"Error reconnecting to OPC UA server: {e}")
 
     def read_variable(self, variableName):
         try:
             if not self.connected:
-                print("Not connected to OPC UA server.")
+                Logger.log(Class.OPC, Criticality.WARNING ,"Trying to read variable without connected, start reconnection")
                 self.__reconnect()
                 return None
             
@@ -60,20 +61,20 @@ class OPC_UA:
                 if node is not None:
                     self._node_cache[variableName] = node
                 else:
-                    print(f"Variable {variableName} not found in OPC UA server.")
+                    Logger.log(Class.OPC, Criticality.ERROR ,f"Variable {variableName} not found in OPC UA server.")
                     return None
             value = node.get_value()
             return value
         
         except Exception as e:
-            print(f"Error reading variable {variableName} from OPC UA server: {e}")
+            Logger.log(Class.OPC, Criticality.ERROR ,f"Error reading variable {variableName} from OPC UA server: {e}")
             self.__reconnect()
             return None
 
     def write_variable(self, variableName, value):
         try:
             if not self.connected:
-                print("Not connected to OPC UA server.")
+                Logger.log(Class.OPC, Criticality.WARNING ,"Trying to write variable without connected, start reconnection")
                 self.__reconnect()
                 return None
             
@@ -85,14 +86,14 @@ class OPC_UA:
                 if node is not None:
                     self._node_cache[variableName] = node
                 else:
-                    print(f"Variable {variableName} not found in OPC UA server.")
+                    Logger.log(Class.OPC, Criticality.ERROR ,f"Variable {variableName} not found in OPC UA server.")
                     return None
             node_type = node.get_data_type_as_variant_type()
             variant = ua.Variant(value, node_type)
             node.set_value(ua.DataValue(variant))
         
         except Exception as e:
-            print(f"Error writing variable {variableName} from OPC UA server: {e}")
+            Logger.log(Class.OPC, Criticality.ERROR ,f"Error writing variable {variableName} from OPC UA server: {e}")
             self.__reconnect()
             return None
         
@@ -102,7 +103,7 @@ class OPC_UA:
 
             # Threshold to avoid infinite recursion 
             if (tmpDeepCount > 20):  
-                print(f"Reached maximum depth while searching for variable {var_name}.")
+                Logger.log(Class.OPC, Criticality.WARNING ,f"Reached maximum depth while searching for variable {var_name}.")
                 return None
 
             # Check if the child's browse name matches the variable name

@@ -2,7 +2,7 @@ from MQTT.mqtt_client import MQTTClient
 from MQTT.readMqttConf import ReadMqttConf
 from readGeneralConf import ReadGeneralConf
 from ConnectionManager import ConnectionManager
-from Logger import Logger, Criticality
+from Logger import Logger, Criticality, Class
 import json
 import time
 import datetime
@@ -11,11 +11,6 @@ from restAPI import create_app
 import threading
 
 def main():
-    Logger.log("Modbus", Criticality.ERROR, "Starting 1")
-    Logger.log("OPC-UA", Criticality.INFO, "Starting 2")
-    Logger.log("Ethernet/IP", Criticality.WARNING, "Starting 3")
-    Logger.log("S7", Criticality.CRITICAL, "Starting 4")
-
     # Define software constants:
     mqttConfFilePath = "MQTT/mqttConf.txt"
     generalConfFilePath = "generalConf.txt"
@@ -61,7 +56,7 @@ def main():
                     value = payload
             connection.write_variable(topic, value)
         except Exception as e:
-            print(f"Error processing message: {e}")
+            Logger.log(Class.MQTT, Criticality.WARNING, f"Error processing message: {e}")
 
     mqtt_client.on_message_callback = on_message
 
@@ -70,7 +65,7 @@ def main():
     def handle_stop(signum, frame):
         nonlocal running
         running = False
-        print("Stopping collector...")
+        Logger.log(Class.GENERAL, Criticality.INFO, "Stopping collector")
 
     signal.signal(signal.SIGTERM, handle_stop)
     signal.signal(signal.SIGINT, handle_stop)  # Ctrl+C

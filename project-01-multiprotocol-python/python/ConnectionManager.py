@@ -9,6 +9,7 @@ import configparser
 import os
 import csv
 from enum import IntEnum
+from Logger import Logger, Criticality, Class
 
 class DriverType(IntEnum):
     GPIO = 0
@@ -40,18 +41,18 @@ class ConnectionManager:
                         raise FileNotFoundError("Configuration file not found: {}".format(connection_path))
                     
                 except Exception as e:
-                    print("Error reading configuration file: {}".format(e))
+                    Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error reading configuration file: {}".format(e))
 
                 driver = self.__getDriverType(configFile)
 
                 if driver is None:
-                    print(f"Skipping {folder}: invalid driver configuration")
+                    Logger.log(Class.CONNECTION_MANAGER, Criticality.WARNING ,f"Skipping {folder}: invalid driver configuration")
                     continue
 
                 match (driver):
                     case DriverType.GPIO: # GPIO driver
                         if platform.system() != 'Linux':
-                            print("GPIO driver only available on Linux")
+                            Logger.log(Class.CONNECTION_MANAGER, Criticality.WARNING ,"GPIO driver only available on Linux")
                             continue
                         # Get parameters
                         parameters = {
@@ -77,7 +78,7 @@ class ConnectionManager:
                                         self.subTopics.add(variable["Topic"])
                                         output_pins.append(variable["GPIO"])
                         except Exception as e:
-                            print("Error reading variables file: {}".format(e))
+                            Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error reading variables file: {}".format(e))
                             
                         # Initialize driver after read all variables to get all write variables
                         driver_instance = GPIO_driver(chip=parameters["gpio"], output_pins=output_pins)
@@ -112,7 +113,7 @@ class ConnectionManager:
                                     if (variable["Access"] == "w"):
                                         self.subTopics.add(variable["Topic"])
                         except Exception as e:
-                            print("Error reading variables file: {}".format(e))
+                            Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error reading variables file: {}".format(e))
 
 
                     case DriverType.ETHERNET_IP: # Ethernet/IP
@@ -137,7 +138,7 @@ class ConnectionManager:
                                     if (variable["Access"] == "w"):
                                         self.subTopics.add(variable["Topic"])
                         except Exception as e:
-                            print("Error reading variables file: {}".format(e))
+                            Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error reading variables file: {}".format(e))
 
 
                     case DriverType.MODBUS_TCP: # Modbus TCP
@@ -166,7 +167,7 @@ class ConnectionManager:
                                     if (variable["Access"] == "w"):
                                         self.subTopics.add(variable["Topic"])
                         except Exception as e:
-                            print("Error reading variables file: {}".format(e))
+                            Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error reading variables file: {}".format(e))
 
 
                     case DriverType.OPC_UA: # OPC-UA
@@ -191,7 +192,7 @@ class ConnectionManager:
                                     if (variable["Access"] == "w"):
                                         self.subTopics.add(variable["Topic"])
                         except Exception as e:
-                            print("Error reading variables file: {}".format(e))
+                            Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error reading variables file: {}".format(e))
                 
                 # Build connection object
                 connection = {
@@ -221,7 +222,7 @@ class ConnectionManager:
             match (connection["Driver"]):
                 case DriverType.GPIO: # GPIO
                     if platform.system() != 'Linux':
-                        print("GPIO driver only available on Linux")
+                        Logger.log(Class.CONNECTION_MANAGER, Criticality.WARNING ,"GPIO driver only available on Linux")
                         continue
                     for variable in connection["Variables"]:
                         if (variable["Access"] == "r"):
@@ -300,7 +301,7 @@ class ConnectionManager:
                         match (connection["Driver"]):
                             case DriverType.GPIO: # GPIO
                                 if platform.system() != 'Linux':
-                                    print("GPIO driver only available on Linux")
+                                    Logger.log(Class.CONNECTION_MANAGER, Criticality.WARNING ,"GPIO driver only available on Linux")
                                     continue
                                 driver.write_variable(variable["GPIO"],
                                                       value)
@@ -321,14 +322,14 @@ class ConnectionManager:
                                                       value)
         
         except Exception as e:
-            print("Error writing variables: {}".format(e))
+            Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error writing variables: {}".format(e))
     
 
     def __getDriverType(self, file):
         try:
             return int(file["Settings"]["driver"])
         except Exception as e:
-            print("Error extracting driver parameters: {}".format(e))
+            Logger.log(Class.CONNECTION_MANAGER, Criticality.ERROR ,"Error extracting driver parameters: {}".format(e))
         
         return None
     

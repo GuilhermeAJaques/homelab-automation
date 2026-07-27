@@ -1,4 +1,5 @@
 import snap7
+from Logger import Logger, Criticality, Class
 
 class S7_NonOptimized:
     def __init__(self, ip, rack, slot):
@@ -11,15 +12,16 @@ class S7_NonOptimized:
 
     def connect(self):
         try:
-            # Connect to the PLC
             self.client.connect(self.ip, self.rack, self.slot)
             if not self.client.get_connected():
-                print("Failed to connect to S7 PLC.")
+                Logger.log(Class.S7, Criticality.ERROR ,"Failed to connect to S7 PLC.")
+                self.connected = False
             else:
-                print(f"Connected to S7 PLC for PLC: {self.ip}")
+                Logger.log(Class.S7, Criticality.INFO ,f"Connected to S7 PLC for PLC: {self.ip}")
                 self.connected = True
         except Exception as e:
-            print(f"Error connecting to S7 PLC: {e}")
+            Logger.log(Class.S7, Criticality.ERROR ,f"Error connecting to S7 PLC: {e}")
+            self.connected = False
 
     def disconnect(self):
         try:
@@ -27,17 +29,17 @@ class S7_NonOptimized:
             self.client.disconnect()
             self.connected = False
         except Exception as e:
-            print(f"Error disconnecting from S7 PLC: {e}")
+            Logger.log(Class.S7, Criticality.ERROR ,f"Error disconnecting from S7 PLC: {e}")
 
     def read_variable(self, db_number, offset, datatype):
         try:
             # Check if connected to the PLC
             if not self.connected:
-                print("Not connected to S7 PLC.")
                 return None
             
             # Reconection
             if not self.client.get_connected():
+                Logger.log(Class.S7, Criticality.WARNING ,"Trying to read variable without connected, start reconnection")
                 self.connect()
             
             # Get the start address
@@ -65,18 +67,18 @@ class S7_NonOptimized:
             return value
         
         except Exception as e:
-            print(f"Error reading data from S7 PLC: {e}")
+            Logger.log(Class.S7, Criticality.ERROR ,f"Error reading data from S7 PLC: {e}")
             return None
         
     def write_variable(self, db_number, offset, datatype, value):
         try:
             # Check if connected to the PLC
             if not self.connected:
-                print("Not connected to S7 PLC.")
                 return None
             
             # Reconection
             if not self.client.get_connected():
+                Logger.log(Class.S7, Criticality.WARNING ,"Trying to read variable without connected, start reconnection")
                 self.connect()
             
             # Get the start address
@@ -105,7 +107,7 @@ class S7_NonOptimized:
                                                         value))
 
         except Exception as e:
-            print(f"Error writing data from S7 PLC: {e}")
+            Logger.log(Class.S7, Criticality.ERROR ,f"Error writing data from S7 PLC: {e}")
 
         
     def __getDTsize(self, datatype):
@@ -144,10 +146,10 @@ class S7_NonOptimized:
                             length = int(datatype[7:-1])
                             size = length + 2  # Add 2 bytes for the string length prefix
                         except ValueError:
-                            print(f"Invalid string length specified: {datatype}")
+                            Logger.log(Class.S7, Criticality.WARNING ,f"Invalid string length specified: {datatype}")
                             return None
                     else:
-                        print(f"Unsupported datatype: {datatype}")
+                        Logger.log(Class.S7, Criticality.WARNING ,f"Unsupported datatype: {datatype}")
                         return None
                 
             # Return the size of the datatype
@@ -155,7 +157,7 @@ class S7_NonOptimized:
         
 
         except Exception as e:
-            print(f"Error determining size for datatype {datatype}: {e}")
+            Logger.log(Class.S7, Criticality.ERROR ,f"Error determining size for datatype {datatype}: {e}")
             return None
     
     def __convert_to_value(self, data, datatype):
@@ -191,14 +193,14 @@ class S7_NonOptimized:
                         try:
                             return snap7.util.get_string(data, 0)
                         except ValueError:
-                            print(f"Invalid string length specified: {datatype}")
+                            Logger.log(Class.S7, Criticality.WARNING ,f"Invalid string length specified: {datatype}")
                             return None
                     else:
-                        print(f"Unsupported datatype: {datatype}")
+                        Logger.log(Class.S7, Criticality.WARNING ,f"Unsupported datatype: {datatype}")
                         return None
         
         except Exception as e:
-            print(f"Error converting data for datatype {datatype}: {e}")
+            Logger.log(Class.S7, Criticality.ERROR ,f"Error converting data for datatype {datatype}: {e}")
             return None
     
     def __convert_to_data(self, data, datatype, value):
@@ -249,12 +251,12 @@ class S7_NonOptimized:
                             snap7.util.set_string(data, 0, value, 254)
                             return data
                         except ValueError:
-                            print(f"Invalid string length specified: {datatype}")
+                            Logger.log(Class.S7, Criticality.WARNING ,f"Invalid string length specified: {datatype}")
                             return None
                     else:
-                        print(f"Unsupported datatype: {datatype}")
+                        Logger.log(Class.S7, Criticality.WARNING ,f"Unsupported datatype: {datatype}")
                         return None
         
         except Exception as e:
-            print(f"Error converting data for datatype {datatype}: {e}")
+            Logger.log(Class.S7, Criticality.ERROR ,f"Error converting data for datatype {datatype}: {e}")
             return None
