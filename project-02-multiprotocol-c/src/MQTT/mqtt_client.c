@@ -3,6 +3,7 @@
 #include "mqtt_client.h"
 #include <unistd.h>
 #include <pthread.h>
+#include "Logger/logger.h"
 
 // Declare methods used above
 static int on_message_arrived(void *context, char *topicName, int topicLen, MQTTClient_message *message);
@@ -43,14 +44,14 @@ int mqtt_connect(MQTTClientWrapper *wrapper)
         rc = MQTTClient_connect(wrapper->client, &conn_opts);
         if (rc == MQTTCLIENT_SUCCESS) 
         {
-            printf("Connected to MQTT broker\n");
+            logger_log(CLASS_MQTT, LOG_INFO , "Connected to MQTT broker");
             wrapper->connected = 1;
             return MQTTCLIENT_SUCCESS;
         }
 
-        printf("Failed to connect, return code %d\n", rc);
+        logger_log(CLASS_MQTT, LOG_ERROR , "Failed to connect, return code %d", rc);
         wrapper->connected = 0;
-        printf("Reconnect failed, retrying in 5 seconds...\n");
+        logger_log(CLASS_MQTT, LOG_WARNING , "Reconnect failed, retrying in 5 seconds...");
         sleep(5);
     }
 }
@@ -65,7 +66,7 @@ void mqtt_disconnect(MQTTClientWrapper *wrapper)
     MQTTClient_disconnect(wrapper->client, 10000);
     MQTTClient_destroy(&wrapper->client); // Release memory area
     wrapper->connected = 0;
-    printf("Disconnected from MQTT broker\n");
+    logger_log(CLASS_MQTT, LOG_INFO , "Disconnected from MQTT broker");
 }
 
 int mqtt_publish(MQTTClientWrapper *wrapper, const char *topic, const char *payload) 
@@ -133,7 +134,7 @@ static void on_connection_lost(void *context, char *cause)
 {
     MQTTClientWrapper *wrapper = (MQTTClientWrapper *)context;
 
-    printf("Connection lost: %s\n", cause);
+    logger_log(CLASS_MQTT, LOG_WARNING , "Connection lost: %s", cause);
     wrapper->connected = 0;
 
     pthread_t thread_id;
@@ -148,7 +149,7 @@ static void *reconnect_thread(void *arg)
     MQTTClient_destroy(&wrapper->client);
     mqtt_connect(wrapper);
 
-    printf("Reconnected successfully\n");
+    logger_log(CLASS_MQTT, LOG_INFO , "Reconnected successfully");
 
     for (int i = 0; i < wrapper->topic_count; i++) {
         mqtt_subscribe(wrapper, wrapper->subscribed_topics[i]);

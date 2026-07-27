@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "config_reader.h"
+#include "Logger/logger.h"
 
 void get_config_value(const char *filename, const char *key, char *value_out, int max_len)
 {
@@ -9,7 +10,7 @@ void get_config_value(const char *filename, const char *key, char *value_out, in
 
     if (file == NULL)
     {
-        printf("Error opening file: %s\n", filename);
+        logger_log(CLASS_GENERAL, LOG_ERROR , "Error opening file: %s", filename);
         return;
     }
 
@@ -49,5 +50,5 @@ void get_config_value(const char *filename, const char *key, char *value_out, in
 
     // Excue if couldn't find any parameter
     fclose(file);
-    printf("Key not found: %s\n", key);
+    logger_log(CLASS_GENERAL, LOG_WARNING , "Key not found: %s", key);
 }

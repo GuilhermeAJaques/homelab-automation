@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../../generalFunctions/string_functions/string_functions.h"
+#include "Logger/logger.h"
 
 static int get_dt_size(const char *datatype);
 static S7_Address_bit get_address_bit(const char *fullAddress);
@@ -26,14 +27,14 @@ int s7_client_connect(S7ClientWrapper *wrapper)
     if (rc == 0)
     {
         wrapper->connected = 1;
-        printf("Connected to PLC %s by S7 connection\n", wrapper->ip);
+        logger_log(CLASS_S7, LOG_INFO , "Connected to PLC %s by S7 connection", wrapper->ip);
         return rc;
     }
     else
     {
         char error_text[256];
         Cli_ErrorText(rc, error_text, sizeof(error_text));
-        printf("Fail to connect to PLC %s by S7 connection: %s\n", wrapper->ip, error_text);
+        logger_log(CLASS_S7, LOG_ERROR , "Fail to connect to PLC %s by S7 connection: %s", wrapper->ip, error_text);
         return rc;
     }
 }
@@ -46,13 +47,13 @@ void s7_client_disconnect(S7ClientWrapper *wrapper)
     {
         wrapper->connected = 0;
         Cli_Destroy(&wrapper->client);
-        printf("Disconnected to PLC %s by S7 connection\n", wrapper->ip);
+        logger_log(CLASS_S7, LOG_INFO , "Disconnected to PLC %s by S7 connection", wrapper->ip);
     }
     else
     {
         char error_text[256];
         Cli_ErrorText(rc, error_text, sizeof(error_text));
-        printf("Fail to disconect to PLC %s by S7 connection: %s\n", wrapper->ip, error_text);
+        logger_log(CLASS_S7, LOG_ERROR , "Fail to disconect to PLC %s by S7 connection: %s", wrapper->ip, error_text);
     }
 }
 
@@ -60,7 +61,7 @@ int s7_client_read(S7ClientWrapper *wrapper,int db_number,const char *offset,con
 {
     if (!is_connected(wrapper))
     {
-        printf("Connection lost, attempting to reconnect...\n");
+        logger_log(CLASS_S7, LOG_WARNING , "Connection lost, attempting to reconnect...");
         wrapper->connected = 0;
         Cli_Destroy(&wrapper->client);
         wrapper->client = Cli_Create();
@@ -78,7 +79,7 @@ int s7_client_read(S7ClientWrapper *wrapper,int db_number,const char *offset,con
     {
         char error_text[256];
         Cli_ErrorText(rc, error_text, sizeof(error_text));
-        printf("Fail to read on offset %s to PLC %s by S7 connection: %s\n", offset, wrapper->ip, error_text);
+        logger_log(CLASS_S7, LOG_ERROR , "Fail to read on offset %s to PLC %s by S7 connection: %s", offset, wrapper->ip, error_text);
         return rc;
     }
 
@@ -98,7 +99,7 @@ int s7_client_write(S7ClientWrapper *wrapper,int db_number,const char *offset,co
 {
     if (!is_connected(wrapper))
     {
-        printf("Connection lost, attempting to reconnect...\n");
+        logger_log(CLASS_S7, LOG_WARNING , "Connection lost, attempting to reconnect...");
         wrapper->connected = 0;
         Cli_Destroy(&wrapper->client);
         wrapper->client = Cli_Create();
@@ -120,7 +121,7 @@ int s7_client_write(S7ClientWrapper *wrapper,int db_number,const char *offset,co
         rc = Cli_DBRead(wrapper->client, db_number, addr_bit.address, 1, buffer);
         if (rc != 0)
         {
-            printf("Error reading byte before writing bool at offset %s\n", offset);
+            logger_log(CLASS_S7, LOG_ERROR , "Error reading byte before writing bool at offset %s", offset);
             return rc;
         }
 
@@ -174,7 +175,7 @@ int s7_client_write(S7ClientWrapper *wrapper,int db_number,const char *offset,co
     {
         char error_text[256];
         Cli_ErrorText(rc, error_text, sizeof(error_text));
-        printf("Fail to read on offset %s to PLC %s by S7 connection: %s\n", offset, wrapper->ip, error_text);
+        logger_log(CLASS_S7, LOG_ERROR , "Fail to read on offset %s to PLC %s by S7 connection: %s", offset, wrapper->ip, error_text);
     }
     return rc;
 }
@@ -243,7 +244,7 @@ static int get_dt_size(const char *datatype)
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_S7, LOG_WARNING , "Wrong data type %s", datatype);
         return 0;
     }
 }
@@ -351,7 +352,7 @@ static void convert_to_string(uint8_t buffer[256], const char *datatype, char *v
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_S7, LOG_WARNING , "Wrong data type %s", datatype);
     }
 }
 
@@ -447,7 +448,7 @@ static void convert_from_string(const char *value, const char *datatype, uint8_t
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_S7, LOG_WARNING , "Wrong data type %s", datatype);
     }
 }
 

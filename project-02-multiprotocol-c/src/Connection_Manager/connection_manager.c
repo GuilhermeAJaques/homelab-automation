@@ -1,5 +1,6 @@
 #include "connection_manager.h"
 #include "generalFunctions/config_reader/config_reader.h"
+#include "Logger/logger.h"
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
@@ -28,7 +29,7 @@ void connection_manager_init(ConnectionManager *manager)
     // Check if was correct allocated
     if (manager->connections == NULL)
     {
-        printf("Error allocating memory for connections\n");
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_ERROR ,"Error allocating memory for connections");
         manager->connectionCount = 0;
         return;
     }
@@ -108,7 +109,7 @@ void connection_manager_connect(ConnectionManager *manager)
 {
     if (manager->connections == NULL)
     {
-        printf("Connection manager not initialize");
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_INFO ,"Connection manager not initialize");
     }
     else
     {
@@ -175,7 +176,7 @@ void connection_manager_disconnect(ConnectionManager *manager)
 {
     if (manager->connections == NULL)
     {
-        printf("Connection manager not initialize");
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_INFO ,"Connection manager not initialize");
     }
     else
     {
@@ -217,7 +218,7 @@ void connection_manager_read_all(ConnectionManager *manager)
 {
     if (manager->connections == NULL)
     {
-        printf("Connection manager not initialize");
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_INFO ,"Connection manager not initialize");
     }
     else
     {
@@ -311,7 +312,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
 {
     if (manager->connections == NULL)
     {
-        printf("Connection manager not initialize");
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_INFO ,"Connection manager not initialize");
     }
     else
     {
@@ -341,7 +342,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is write only", topic);
                                 finished = 1;
                             }
                         }
@@ -367,7 +368,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is write only", topic);
                                 finished = 1;
                             }
                         }
@@ -392,7 +393,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is write only", topic);
                                 finished = 1;
                             }
                         }
@@ -417,7 +418,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is write only", topic);
                                 finished = 1;
                             }
                         }
@@ -441,7 +442,7 @@ void connection_manager_read(ConnectionManager *manager, char *topic, VariableVa
                             }
                             else
                             {
-                                printf("Topic %s is write only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is write only", topic);
                                 finished = 1;
                             }
                         }
@@ -457,7 +458,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
 {    
     if (manager->connections == NULL)
     {
-        printf("Connection manager not initialize");
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_INFO ,"Connection manager not initialize");
     }
     else
     {
@@ -482,7 +483,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is read only", topic);
                                 finished = 1;
                             }
                         }
@@ -503,7 +504,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is read only", topic);
                                 finished = 1;
                             }
                         }
@@ -523,7 +524,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is read only", topic);
                                 finished = 1;
                             }
                         }
@@ -543,7 +544,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is read only", topic);
                                 finished = 1;
                             }
                         }
@@ -562,7 +563,7 @@ void connection_manager_write(ConnectionManager *manager, char *topic, char *val
                             }
                             else
                             {
-                                printf("Topic %s is read only\n", topic);
+                                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Topic %s is read only", topic);
                                 finished = 1;
                             }
                         }
@@ -580,7 +581,7 @@ static int get_connections(const char *basePath, char path[][300])
 
     if (dir == NULL)
     {
-        printf("Error opening directory: %s \n", basePath);
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_ERROR ,"Error opening directory: %s", basePath);
         return 0;
     }
 
@@ -593,7 +594,7 @@ static int get_connections(const char *basePath, char path[][300])
         {
             if (count >= MAX_CONNECTIONS)
             {
-                printf("Maximum connection reached");
+                logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Maximum connection reached");
                 closedir(dir);
                 return count;
             }
@@ -652,7 +653,7 @@ static int get_variables_csv(const char *basePath, char line[][100])
     FILE *file = fopen(basePath, "r");
     if (file == NULL)
     {
-        printf("Error opening file: %s\n", basePath);
+        logger_log(CLASS_CONNECTION_MANAGER, LOG_ERROR ,"Error opening file: %s", basePath);
         return 0;
     }
 
@@ -664,7 +665,7 @@ static int get_variables_csv(const char *basePath, char line[][100])
     {
         if (count >= MAX_VARIABLES)
         {
-            printf("Maximum variables reached");
+            logger_log(CLASS_CONNECTION_MANAGER, LOG_WARNING ,"Maximum variables reached");
             fclose(file);
             return count;
         }

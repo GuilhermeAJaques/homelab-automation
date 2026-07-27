@@ -1,6 +1,7 @@
 #include "gpio.h"
 #include <string.h>
 #include <stdio.h>
+#include "Logger/logger.h"
 
 void gpio_client_init(GPIOClientWrapper *wrapper, const char *chipPath)
 {
@@ -15,11 +16,11 @@ int gpio_client_connect(GPIOClientWrapper *wrapper, int *output_pins, int output
 
     if (wrapper->chip == NULL)
     {
-        printf("Error opening GPIO chip: %s\n", wrapper->chipPath);
+        logger_log(CLASS_GPIO, LOG_ERROR , "Error opening GPIO chip: %s", wrapper->chipPath);
         return 0;
     }
 
-    printf("Connected to GPIO chip: %s\n", wrapper->chipPath);
+    logger_log(CLASS_GPIO, LOG_INFO , "Connected to GPIO chip: %s", wrapper->chipPath);
     wrapper->connected = 1;
     
     if (output_count > 0)
@@ -44,7 +45,7 @@ int gpio_client_connect(GPIOClientWrapper *wrapper, int *output_pins, int output
 
         if (wrapper->output_request == NULL)
         {
-            printf("Error requesting GPIO output lines\n");
+            logger_log(CLASS_GPIO, LOG_ERROR , "Error requesting GPIO output lines");
             return 0;
         }
     }
@@ -56,7 +57,7 @@ void gpio_client_disconnect(GPIOClientWrapper *wrapper)
 {
     gpiod_chip_close(wrapper->chip);
     wrapper->connected = 0;
-    printf("Disconnected from GPIO chip: %s\n", wrapper->chipPath);
+    logger_log(CLASS_GPIO, LOG_INFO , "Disconnected from GPIO chip: %s", wrapper->chipPath);
 }
 
 int gpio_client_read(GPIOClientWrapper *wrapper, int offset, char *value, int max_len)
@@ -73,7 +74,7 @@ int gpio_client_read(GPIOClientWrapper *wrapper, int offset, char *value, int ma
 
     if (request == NULL)
     {
-        printf("Error requesting GPIO line %d\n", offset);
+        logger_log(CLASS_GPIO, LOG_ERROR , "Error requesting GPIO line %d", offset);
         gpiod_line_config_free(line_cfg);
         gpiod_line_settings_free(settings);
         return 0;
@@ -84,7 +85,7 @@ int gpio_client_read(GPIOClientWrapper *wrapper, int offset, char *value, int ma
 
     if (val == GPIOD_LINE_VALUE_ERROR)
     {
-        printf("Error reading GPIO line %d\n", offset);
+        logger_log(CLASS_GPIO, LOG_ERROR , "Error reading GPIO line %d", offset);
         gpiod_line_request_release(request);
         gpiod_line_config_free(line_cfg);
         gpiod_line_settings_free(settings);
@@ -104,7 +105,7 @@ int gpio_client_write(GPIOClientWrapper *wrapper, int offset, const char *value)
 {
     if (wrapper->output_request == NULL)
     {
-        printf("Error: output lines not requested\n");
+        logger_log(CLASS_GPIO, LOG_ERROR , "Error: output lines not requested");
         return 0;
     }
 
@@ -115,7 +116,7 @@ int gpio_client_write(GPIOClientWrapper *wrapper, int offset, const char *value)
 
     if (rc != 0)
     {
-        printf("Error writing GPIO line %d\n", offset);
+        logger_log(CLASS_GPIO, LOG_ERROR , "Error writing GPIO line %d", offset);
         return 0;
     }
 

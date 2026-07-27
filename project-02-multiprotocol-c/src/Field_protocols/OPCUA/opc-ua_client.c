@@ -1,6 +1,7 @@
 #include "opc-ua_client.h"
 #include <string.h>
 #include <stdio.h>
+#include "Logger/logger.h"
 
 static int is_connected(OPCClientWrapper *wrapper);
 static int find_node(OPCClientWrapper *wrapper, UA_NodeId startNode, const char *variableName, UA_NodeId *foundNode, int depth);
@@ -21,12 +22,12 @@ int opc_client_connect(OPCClientWrapper *wrapper)
 
     if (rc == UA_STATUSCODE_GOOD)
     {
-        printf("Connected to OPC-UA server: %s\n", wrapper->url);
+        logger_log(CLASS_OPC, LOG_INFO , "Connected to OPC-UA server: %s", wrapper->url);
         wrapper->connected = 1;
     }
     else
     {
-        printf("Fail to connect to OPC-UA server: %s with code: %d\n", wrapper->url, rc);
+        logger_log(CLASS_OPC, LOG_ERROR , "Fail to connect to OPC-UA server: %s with code: %d", wrapper->url, rc);
     }
     return rc;
 }
@@ -38,13 +39,13 @@ void opc_client_disconnect(OPCClientWrapper *wrapper)
     
     if (rc == UA_STATUSCODE_GOOD)
     {
-        printf("Disconeected to OPC-UA server: %s\n", wrapper->url);
+        logger_log(CLASS_OPC, LOG_INFO , "Disconeected to OPC-UA server: %s", wrapper->url);
         UA_Client_delete(wrapper->client);
         wrapper->connected = 0;
     }
     else
     {
-        printf("Fail to disconnect to OPC-UA server: %s with code: %d\n", wrapper->url, rc);
+        logger_log(CLASS_OPC, LOG_ERROR , "Fail to disconnect to OPC-UA server: %s with code: %d", wrapper->url, rc);
     }
 }
 
@@ -52,12 +53,12 @@ int opc_client_read(OPCClientWrapper *wrapper, char *variableName, char *value, 
 {
     if (!is_connected(wrapper))
     {
-        printf("Connection lost, attempting to reconnect...\n");
+        logger_log(CLASS_OPC, LOG_ERROR , "Connection lost, attempting to reconnect...");
         UA_Client_disconnect(wrapper->client);
         int rc = UA_Client_connect(wrapper->client, wrapper->url);
         if (rc != UA_STATUSCODE_GOOD)
         {
-            printf("Reconnect failed\n");
+            logger_log(CLASS_OPC, LOG_ERROR , "Reconnect failed");
             return -1;
         }
         wrapper->connected = 1;
@@ -69,7 +70,7 @@ int opc_client_read(OPCClientWrapper *wrapper, char *variableName, char *value, 
     int rc = find_node(wrapper, startNode, variableName, &node, 0);
     if (rc == 0)
     {
-        printf("Variable %s not found\n", variableName);
+        logger_log(CLASS_OPC, LOG_ERROR , "Variable %s not found", variableName);
         return -1;
     }
 
@@ -79,7 +80,7 @@ int opc_client_read(OPCClientWrapper *wrapper, char *variableName, char *value, 
     rc = UA_Client_readValueAttribute(wrapper->client, node, &uaValue);
     if (rc != UA_STATUSCODE_GOOD)
     {
-        printf("Fail to read the variable %s to OPC-UA server: %s with code: %d\n",variableName, wrapper->url, rc);
+        logger_log(CLASS_OPC, LOG_ERROR , "Fail to read the variable %s to OPC-UA server: %s with code: %d",variableName, wrapper->url, rc);
         UA_Variant_clear(&uaValue);
         return rc;
     }
@@ -94,12 +95,12 @@ int opc_client_write(OPCClientWrapper *wrapper, char *variableName,const char *v
 {
     if (!is_connected(wrapper))
     {
-        printf("Connection lost, attempting to reconnect...\n");
+        logger_log(CLASS_OPC, LOG_WARNING , "Connection lost, attempting to reconnect...");
         UA_Client_disconnect(wrapper->client);
         int rc = UA_Client_connect(wrapper->client, wrapper->url);
         if (rc != UA_STATUSCODE_GOOD)
         {
-            printf("Reconnect failed\n");
+            logger_log(CLASS_OPC, LOG_ERROR , "Reconnect failed");
             return -1;
         }
         wrapper->connected = 1;
@@ -111,7 +112,7 @@ int opc_client_write(OPCClientWrapper *wrapper, char *variableName,const char *v
     int rc = find_node(wrapper, startNode, variableName, &node, 0);
     if (rc == 0)
     {
-        printf("Variable %s not found\n", variableName);
+        logger_log(CLASS_OPC, LOG_WARNING , "Variable %s not found", variableName);
         return -1;
     }
 
@@ -121,7 +122,7 @@ int opc_client_write(OPCClientWrapper *wrapper, char *variableName,const char *v
     rc = UA_Client_readValueAttribute(wrapper->client, node, &uaDatatype);
     if (rc != UA_STATUSCODE_GOOD)
     {
-        printf("Error reading current value to determine type: %s\n", variableName);
+        logger_log(CLASS_OPC, LOG_ERROR , "Error reading current value to determine type: %s", variableName);
         UA_Variant_clear(&uaDatatype);
         return rc;
     }
@@ -136,7 +137,7 @@ int opc_client_write(OPCClientWrapper *wrapper, char *variableName,const char *v
 
     if (rc != UA_STATUSCODE_GOOD)
     {
-        printf("Error writing variable %s: %d\n", variableName, rc);
+        logger_log(CLASS_OPC, LOG_ERROR , "Error writing variable %s: %d", variableName, rc);
         return rc;
     }
 
@@ -298,7 +299,7 @@ static void convert_to_string(UA_Variant *variant, char *value, int max_len)
     }
     else
     {
-        printf("Unknown OPC-UA data type\n");
+        logger_log(CLASS_OPC, LOG_WARNING , "Unknown OPC-UA data type");
         snprintf(value, max_len, "?");
     }
 }
@@ -359,6 +360,6 @@ static void convert_from_string(const char *value, UA_Variant *originalVariant, 
     }
     else
     {
-        printf("Unknown OPC-UA data type for write\n");
+        logger_log(CLASS_OPC, LOG_WARNING , "Unknown OPC-UA data type for write");
     }
 }

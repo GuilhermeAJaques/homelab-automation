@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "../../generalFunctions/string_functions/string_functions.h"
 #include <errno.h>
+#include "Logger/logger.h"
 
 
 
@@ -27,7 +28,7 @@ int modbus_client_connect(ModbusClientWrapper *wrapper)
 
     if (wrapper->client == NULL)
     {
-        printf("Error to create Modbus TCP client\n");
+        logger_log(CLASS_MODBUS, LOG_ERROR ,"Error to create Modbus TCP client");
         return -1;
     }
 
@@ -35,13 +36,13 @@ int modbus_client_connect(ModbusClientWrapper *wrapper)
 
     if (result == 0)
     {
-        printf("Connected to Modbus TCP server\n");
+        logger_log(CLASS_MODBUS, LOG_INFO ,"Connected to Modbus TCP server");
         wrapper->connected = 1;
         return result;
     }
     else
     {
-        printf("Error to connect Modbus TCP server: %d\n", result);
+        logger_log(CLASS_MODBUS, LOG_ERROR ,"Error to connect Modbus TCP server: %d", result);
         wrapper->connected = 0;
         return result;
     }
@@ -51,7 +52,7 @@ void modbus_client_disconnect(ModbusClientWrapper *wrapper)
 {
     // Disconect from Modbus TCP server
     modbus_close(wrapper->client);
-    printf("Disconnected from Modbus TCP server\n");
+    logger_log(CLASS_MODBUS, LOG_INFO ,"Disconnected from Modbus TCP server");
     wrapper->connected = 0;
 
     // Release memory area
@@ -71,7 +72,7 @@ int modbus_client_read(ModbusClientWrapper *wrapper, const char *address, const 
 
     if (addr_fc.fc == -1)
     {
-        printf("Invalid address: %s\n", address);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Invalid address: %s", address);
         return 0;
     }
 
@@ -98,14 +99,15 @@ int modbus_client_read(ModbusClientWrapper *wrapper, const char *address, const 
     }
     else
     {
-        printf("Unknown function code for address %s\n", address);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Unknown function code for address %s", address);
         return 0;
     }
 
     if (rc == -1)
     {
-        printf("Error reading Modbus address %s: %s\n", address, modbus_strerror(errno));
-        is_not_connected(wrapper, errno);
+        int err = errno;
+        logger_log(CLASS_MODBUS, LOG_ERROR ,"Error reading Modbus address %s: %s", address, modbus_strerror(err));
+        is_not_connected(wrapper, err);
         return 0;
     }
     else
@@ -136,7 +138,7 @@ int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const
 
     if (addr_fc.fc == -1)
     {
-        printf("Invalid address: %s\n", address);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Invalid address: %s", address);
         return 0;
     }
     int nb = get_dt_size(datatype);
@@ -155,7 +157,7 @@ int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const
         }
         else
         {
-            printf("Invalid boolean value: %s (expected true/false/1/0)\n", value);
+            logger_log(CLASS_MODBUS, LOG_WARNING ,"Invalid boolean value: %s (expected true/false/1/0)", value);
         }
 
         rc = modbus_write_bit(wrapper->client, addr_fc.addr, bool_value);
@@ -174,14 +176,15 @@ int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const
     }
     else
     {
-        printf("Unknown function code for address %s\n", address);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Unknown function code for address %s", address);
         return 0;
     }
 
     if (rc == -1)
     {
-        printf("Error writing Modbus address %s: %s\n", address, modbus_strerror(errno));
-        is_not_connected(wrapper, errno);
+        int err = errno;
+        logger_log(CLASS_MODBUS, LOG_ERROR ,"Error writing Modbus address %s: %s", address, modbus_strerror(err));
+        is_not_connected(wrapper, err);
         return 0;
     }
     return 1;
@@ -189,12 +192,13 @@ int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const
 
 static void is_not_connected(ModbusClientWrapper *wrapper, int err)
 {
+    printf("err: %d\n", err);
     if (err == ECONNRESET || // Connection reseted
         err == ETIMEDOUT ||  // Timeout
         err == EPIPE ||  // Connection broken
         err == ECONNREFUSED) // Connection refused
     {
-        printf("Connection lost, attempting to reconnect...\n");
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Connection lost, attempting to reconnect...");
         wrapper->connected = 0;
         modbus_close(wrapper->client);
         modbus_free(wrapper->client);
@@ -244,7 +248,7 @@ static Modbus_Address_FC getAddress_FC(char *fullAddress, int access)
         }
         else
         {
-            printf("Unknown address prefix: %s\n", prefix);
+            logger_log(CLASS_MODBUS, LOG_WARNING ,"Unknown address prefix: %s", prefix);
         }
     }
     else if (access == MODBUS_ACCESS_WRITE) // write
@@ -272,12 +276,12 @@ static Modbus_Address_FC getAddress_FC(char *fullAddress, int access)
         }
         else
         {
-            printf("Unknown address prefix: %s\n", prefix);
+            logger_log(CLASS_MODBUS, LOG_WARNING ,"Unknown address prefix: %s", prefix);
         }
     }
     else
     {
-        printf("Wrong access mode on getAddress_FC: %i", access);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Wrong access mode on getAddress_FC: %i", access);
     }
 
     // ===========================
@@ -400,7 +404,7 @@ static int get_dt_size(const char *datatype)
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Wrong data type %s", datatype);
         return 0;
     }
 }
@@ -641,7 +645,7 @@ static void convert_to_string(uint16_t registers[50],const char *datatype, char 
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Wrong data type %s", datatype);
     }
 }
 
@@ -769,6 +773,6 @@ static void convert_from_string(const char *value,const char *datatype, uint16_t
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_MODBUS, LOG_WARNING ,"Wrong data type %s", datatype);
     }
 }

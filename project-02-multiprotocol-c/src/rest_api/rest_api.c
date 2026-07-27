@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include "Logger/logger.h"
 
 typedef struct {
     char data[500];
@@ -272,11 +273,11 @@ int rest_api_start(RestApiWrapper *wrapper, ConnectionManager *manager, pthread_
 
     if (wrapper->daemon == NULL)
     {
-        printf("Error starting REST API on port %d\n", port);
+        logger_log(CLASS_REST_API, LOG_ERROR , "Error starting REST API on port %d", port);
         return 0;
     }
 
-    printf("REST API listening on port %d\n", port);
+    logger_log(CLASS_REST_API, LOG_INFO , "REST API listening on port %d", port);
     return 1;
 }
 

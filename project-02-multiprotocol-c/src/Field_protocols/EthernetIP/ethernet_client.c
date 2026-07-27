@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../../generalFunctions/string_functions/string_functions.h"
+#include "Logger/logger.h"
 
 // Declare methods used
 static int get_dt_size(const char *datatype);
@@ -30,7 +31,7 @@ int ethernetip_client_read(EthernetIPClientWrapper *wrapper, const char *tag_nam
 
     if (tag < 0)
     {
-        printf("Error creating tag %s: %s\n", tag_name, plc_tag_decode_error(tag));
+        logger_log(CLASS_ETHERNET, LOG_ERROR , "Error creating tag %s: %s", tag_name, plc_tag_decode_error(tag));
         return 0;
     }
 
@@ -44,7 +45,7 @@ int ethernetip_client_read(EthernetIPClientWrapper *wrapper, const char *tag_nam
     }
     else
     {
-        printf("Error to read variable %s from the PLC %s: %i\n", tag_name, wrapper->ip, rc);
+        logger_log(CLASS_ETHERNET, LOG_ERROR , "Error to read variable %s from the PLC %s: %i", tag_name, wrapper->ip, rc);
         plc_tag_destroy(tag);
         return 0;
     }
@@ -66,7 +67,7 @@ int ethernetip_client_write(EthernetIPClientWrapper *wrapper, const char *tag_na
 
     if (tag < 0)
     {
-        printf("Error creating tag %s: %s\n", tag_name, plc_tag_decode_error(tag));
+        logger_log(CLASS_ETHERNET, LOG_ERROR , "Error creating tag %s: %s", tag_name, plc_tag_decode_error(tag));
         return 0;
     }
 
@@ -78,7 +79,7 @@ int ethernetip_client_write(EthernetIPClientWrapper *wrapper, const char *tag_na
 
     if (rc != PLCTAG_STATUS_OK)
     {
-        printf("Error writing variable %s to PLC %s: %d\n", tag_name, wrapper->ip, rc);
+        logger_log(CLASS_ETHERNET, LOG_ERROR , "Error writing variable %s to PLC %s: %d", tag_name, wrapper->ip, rc);
         plc_tag_destroy(tag);
         return 0;
     }
@@ -139,7 +140,7 @@ static int get_dt_size(const char *datatype)
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_ETHERNET, LOG_WARNING , "Wrong data type %s", datatype);
         return 0;
     }
 }
@@ -220,7 +221,7 @@ static void convert_to_string(int32_t tag,const char *datatype, char *out_str, i
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_ETHERNET, LOG_WARNING , "Wrong data type %s", datatype);
     }
 }
 
@@ -250,7 +251,7 @@ static void convert_from_string(int32_t tag,const char *datatype, const char *va
         }
         else
         {
-            printf("Invalid boolean value: %s (expected true/false/1/0)\n", value);
+            logger_log(CLASS_ETHERNET, LOG_WARNING , "Invalid boolean value: %s (expected true/false/1/0)", value);
         }
 
         plc_tag_set_uint8(tag, 0, bool_value);
@@ -305,6 +306,6 @@ static void convert_from_string(int32_t tag,const char *datatype, const char *va
     }
     else
     {
-        printf("Wrong data type %s\n", datatype);
+        logger_log(CLASS_ETHERNET, LOG_WARNING , "Wrong data type %s", datatype);
     }
 }

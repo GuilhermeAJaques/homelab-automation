@@ -2,6 +2,7 @@
 #include "Connection_Manager/connection_manager.h"
 #include "generalFunctions/config_reader/config_reader.h"
 #include "rest_api/rest_api.h"
+#include "Logger/logger.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -162,5 +163,5 @@ static int is_numeric_or_bool(const char *value)
 void handle_stop(int signum)
 {
     running = 0;
-    printf("Stopping collector...\n");
+    logger_log(CLASS_GENERAL, LOG_INFO, "Stopping collector...");
 }
