@@ -2,6 +2,7 @@ from MQTT.mqtt_client import MQTTClient
 from MQTT.readMqttConf import ReadMqttConf
 from readGeneralConf import ReadGeneralConf
 from ConnectionManager import ConnectionManager
+from Logger import Logger, Criticality
 import json
 import time
 import datetime
@@ -10,6 +11,11 @@ from restAPI import create_app
 import threading
 
 def main():
+    Logger.log("Modbus", Criticality.ERROR, "Starting 1")
+    Logger.log("OPC-UA", Criticality.INFO, "Starting 2")
+    Logger.log("Ethernet/IP", Criticality.WARNING, "Starting 3")
+    Logger.log("S7", Criticality.CRITICAL, "Starting 4")
+
     # Define software constants:
     mqttConfFilePath = "MQTT/mqttConf.txt"
     generalConfFilePath = "generalConf.txt"
