@@ -192,7 +192,6 @@ int modbus_client_write(ModbusClientWrapper *wrapper, const char *address, const
 
 static void is_not_connected(ModbusClientWrapper *wrapper, int err)
 {
-    printf("err: %d\n", err);
     if (err == ECONNRESET || // Connection reseted
         err == ETIMEDOUT ||  // Timeout
         err == EPIPE ||  // Connection broken

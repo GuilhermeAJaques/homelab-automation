@@ -180,6 +180,33 @@ make
 
 Tested on x86\_64 (Debian/WSL2) and ARM64 (Raspberry Pi 3, Debian).
 
+## Logging (Grafana Loki)
+
+All internal events (connection status, read/write errors, reconnection attempts) go through a single `logger_log` function instead of scattered `printf` calls, defined in `Logger/logger.c`. Every call prints to the console **and** pushes the event to a [Grafana Loki](../project-00-setup/#logging-grafana-loki) instance over a raw TCP socket (a hand-rolled HTTP `POST`, no external HTTP client library), so operational history is queryable from Grafana alongside the process data.
+
+Configured at `src/Logger/logConf.txt`:
+
+```
+host=localhost
+port=3100
+```
+
+Usage from anywhere in the codebase:
+
+```c
+#include "Logger/logger.h"
+ 
+logger_log(CLASS_MODBUS, LOG_ERROR, "Failed to connect to Modbus TCP server");
+```
+
+`logger_log` accepts `printf`\-style format arguments, e.g. `logger_log(CLASS_S7, LOG_WARNING, "Topic %s is write only", topic);`.
+
+`**Criticality**` (sent as the `criticality` Loki label): `LOG_INFO`, `LOG_WARNING`, `LOG_ERROR`, `LOG_CRITICAL`.
+
+`**LogClass**` (sent as the `class` Loki label): `CLASS_GENERAL`, `CLASS_REST_API`, `CLASS_GPIO`, `CLASS_CONNECTION_MANAGER`, `CLASS_MQTT`, `CLASS_ETHERNET`, `CLASS_MODBUS`, `CLASS_OPC`, `CLASS_S7` — one per module/protocol, matching the equivalent enum in the Python implementation so both collectors' logs share the same label values in Grafana.
+
+If Loki is unreachable, the socket connect/send/receive calls are bounded by a 2-second timeout and any failure is silently discarded — logging never blocks or crashes the main collection loop, it only stops being persisted remotely until connectivity is restored.
+
 ## Simulation environment
 
 All PLCs run a small tank-process simulation for testing; the Siemens logic is available under `/Siemens`. Three PLCs run at the same time in the simulation environment:

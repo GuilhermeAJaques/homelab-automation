@@ -167,6 +167,32 @@ Returns a JSON object with the current value of a single variable, identified by
 **POST** `http://<device-ip>:5000/write`  
 Body (JSON): `{"topic": "variable_topic", "value": value}`
 
+## Logging (Grafana Loki)
+
+All internal events (connection status, read/write errors, reconnection attempts) go through a single `Logger` class instead of scattered `print` calls, defined in `Logger.py`. Every call prints to the console **and** pushes the event to a [Grafana Loki](../project-00-setup/#logging-grafana-loki) instance, so operational history is queryable from Grafana alongside the process data.
+
+Configured at `python/logConf.txt`:
+
+```
+[Settings]
+host=localhost
+port=3100
+```
+
+Usage from anywhere in the codebase:
+
+```python
+from Logger import Logger, Criticality, Class
+ 
+Logger.log(Class.MODBUS, Criticality.ERROR, "Failed to connect to Modbus TCP server")
+```
+
+`**Criticality**` (sent as the `criticality` Loki label): `INFO`, `WARNING`, `ERROR`, `CRITICAL`.
+
+`**Class**` (sent as the `class` Loki label): `GENERAL`, `REST_API`, `GPIO`, `CONNECTION_MANAGER`, `MQTT`, `ETHERNET`, `MODBUS`, `OPC`, `S7` — one per module/protocol, matching the equivalent enum in the C implementation so both collectors' logs share the same label values in Grafana.
+
+If Loki is unreachable, the HTTP call times out after 2 seconds and is silently discarded — logging never blocks or crashes the main collection loop, it only stops being persisted remotely until connectivity is restored.
+
 ## Building and running
 
 Make sure the Docker containers (MQTT broker, InfluxDB, Grafana, Node-RED) are running first.
