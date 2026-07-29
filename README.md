@@ -44,6 +44,6 @@ The edge device also exposes a REST API to read and write variables directly, in
 
 ## Logging
 
-Both collectors push structured application logs (connection status, read/write errors, reconnection attempts) to a Grafana Loki instance running natively on the Raspberry Pi, tagged with a `class` (which protocol/module the event came from) and a `criticality` (Info, Warning, Error, Critical) label. The same Grafana instance used for the sensor dashboards queries Loki directly, so operational logs from both implementations sit next to the process data, filterable by criticality and by module. Logging never blocks the main collection loop: if Loki is unreachable, the event is still printed to the console and simply skipped over the network.
-
 ![Loki](images/imgLog.png)
+
+Both collectors push structured application logs (connection status, read/write errors, reconnection attempts) to a Grafana Loki instance running natively on the Raspberry Pi, tagged with a `class` (which protocol/module the event came from) and a `criticality` (Info, Warning, Error, Critical) label. The same Grafana instance used for the sensor dashboards queries Loki directly, so operational logs from both implementations sit next to the process data, filterable by criticality and by module. Logging never blocks the main collection loop: if Loki is unreachable, the event is still printed to the console and simply skipped over the network.
